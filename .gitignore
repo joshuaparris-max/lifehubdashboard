@@ -1,0 +1,16 @@
+# Ignore everything by default
+*
+
+# Allow dashboard assets and docs
+!.gitignore
+!README.md
+!dashboard.html
+!dashboard.css
+!dashboard.js
+!dashboard-data.js
+!dashboard-stats.json
+!welltory-summary.json
+
+# Allow scripts folder
+!scripts/
+!scripts/**
