@@ -2,11 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LifeHub Dashboard</title>
   <link rel="stylesheet" href="dashboard.css" />
   
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" style="display: none;">☰</button>
+  <nav class="side-nav" aria-label="Quick navigation">
+    <div class="side-nav-title">Jump to</div>
+    <ul>
+      <li><a href="#main-content">Overview</a></li>
+      <li><a href="#copilot-panel">Copilot</a></li>
+      <li><a href="#automation-scheduler-panel">Automation</a></li>
+      <li><a href="#health-panel">System health</a></li>
+      <li><a href="#timeline-panel">Timeline</a></li>
+      <li><a href="#recent-files-panel">Recent</a></li>
+      <li><a href="#wellbeing-widget">Wellbeing</a></li>
+      <li><a href="#resource-spotlight">Spotlight</a></li>
+      <li><a href="#playables">Playables</a></li>
+      <li><a href="#triage-panel">Inbox triage</a></li>
+      <li><a href="#downloads-panel">Downloads</a></li>
+      <li><a href="#downloads-triage-panel">Downloads triage</a></li>
+      <li><a href="#resurface-panel">Resurface</a></li>
+      <li><a href="#backup-panel">Backup</a></li>
+      <li><a href="#text-game-panel">Text game</a></li>
+      <li><a href="#text-game-v2-panel">Text game v2</a></li>
+      <li><a href="#scratchpad-panel">Scratchpad</a></li>
+    </ul>
+  </nav>
   <header>
     <div>
       <h1>LifeHub Dashboard</h1>
@@ -16,9 +41,71 @@
       <span class="pill">Sweep Downloads → Inbox</span>
       <span class="pill">Tag cross-cutting topics</span>
       <span class="pill">Quarterly archive review</span>
+      <button class="pill focus-toggle" type="button" id="focus-toggle" aria-pressed="false">
+        Focus mode: Off
+      </button>
+      <button class="pill focus-toggle kiosk-toggle" type="button" id="kiosk-toggle" aria-pressed="false">
+        Kiosk mode: Off
+      </button>
+      <button class="pill focus-toggle kiosk-toggle" type="button" id="kiosk-pause" aria-pressed="false">
+        Pause rotation
+      </button>
     </div>
   </header>
-
+  <div class="control-bar" aria-label="Display and accessibility controls">
+    <label>
+      Theme
+      <select id="theme-select">
+        <option value="modern">Modern</option>
+        <option value="classic">Classic</option>
+        <option value="contrast">High contrast</option>
+      </select>
+    </label>
+    <label class="toggle-chip">
+      <input type="checkbox" id="compact-toggle" />
+      <span>Compact spacing</span>
+    </label>
+    <label class="toggle-chip">
+      <input type="checkbox" id="calm-toggle" />
+      <span>Calm mode</span>
+    </label>
+    <label class="toggle-chip">
+      <input type="checkbox" id="readable-font-toggle" />
+      <span>Readable font</span>
+    </label>
+    <label class="toggle-chip">
+      <input type="checkbox" id="shadow-toggle" />
+      <span>No shadows</span>
+    </label>
+    <div class="control-actions">
+      <button type="button" id="settings-export" class="ghost" title="Export display/settings to JSON">Export settings</button>
+      <label class="toggle-chip" style="border-style: solid;">
+        <input type="file" id="settings-import" accept="application/json" />
+        <span>Import settings</span>
+      </label>
+      <button type="button" id="status-report-export" class="ghost" title="Export a markdown summary">Export status report</button>
+    </div>
+  </div>
+  <details class="kiosk-settings" id="kiosk-settings">
+    <summary>Customize kiosk rotation</summary>
+    <div class="kiosk-settings-body">
+      <label for="kiosk-interval-input">Panel dwell time (seconds)</label>
+      <input type="number" id="kiosk-interval-input" min="5" max="60" step="1" value="8" />
+      <p>Drag the list or use the arrows to define which panels rotate in kiosk mode.</p>
+      <div class="kiosk-presets">
+        <h4>Presets</h4>
+        <div class="kiosk-preset-buttons">
+          <button type="button" data-kiosk-preset="ops">Ops sweep</button>
+          <button type="button" data-kiosk-preset="inbox">Inbox focus</button>
+          <button type="button" data-kiosk-preset="showcase">Showcase</button>
+        </div>
+        <p class="task-meta">Apply a preset, then fine-tune the order below.</p>
+      </div>
+      <ul id="kiosk-order-list" class="kiosk-order-list"></ul>
+      <button type="button" id="kiosk-settings-save">Save kiosk layout</button>
+    </div>
+  </details>
+  <main id="main-content">
   <section class="utility">
     <div class="panel search-panel">
       <label for="search">Search folders or tags</label>
@@ -27,49 +114,283 @@
     <div class="panel quick-actions">
       <h2>Quick actions</h2>
       <div class="quick-action-grid">
-        <a class="quick-link" href="../Downloads" target="_blank" rel="noopener">Open Downloads folder</a>
-        <a class="quick-link" href="Inbox" target="_blank" rel="noopener">Jump to Inbox</a>
+        <a class="quick-link" href="Downloads/index.html" target="_blank" rel="noopener">Open Downloads folder</a>
+        <a class="quick-link" href="Inbox/index.html" target="_blank" rel="noopener">Jump to Inbox</a>
         <a class="quick-link" href="README.md" target="_blank" rel="noopener">View LifeHub guide</a>
-        <button class="quick-link secondary" type="button" id="copy-stats-command">Copy stats refresh command</button>
+  <a class="quick-link" href="https://josh-hub-96no.vercel.app/dashboard" target="_blank" rel="noopener noreferrer" style="background:#0b7dda;color:#fff;border-radius:6px;padding:8px 10px;">Open JoshHub</a>
+      <button class="quick-link secondary" type="button" id="copy-stats-command">Copy stats refresh command</button>
+    <button class="quick-link secondary" type="button" id="open-settings">Settings</button>
+      </div>
+      <!-- Quick Launch inspired by JoshHub: small actionable tiles -->
+      <h3 style="margin-top:12px;">Quick launch</h3>
+      <div class="quick-launch-grid" role="list" id="quick-launch-grid">
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-start-timer" data-id="start-timer" tabindex="0" draggable="true" href="https://timer-tab.com/" target="_blank" rel="noopener" title="Start a focused timer"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">⏱️</span><span class="label">Start timer</span></a>
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-new-note" data-id="new-note" tabindex="0" draggable="true" href="#scratchpad-panel" title="Open scratchpad"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">📝</span><span class="label">New note</span></a>
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-log-expense" data-id="log-expense" tabindex="0" draggable="true" href="Finance/index.html" target="_blank" rel="noopener" title="Log an expense"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">💳</span><span class="label">Log expense</span></a>
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-welltory" data-id="welltory" tabindex="0" draggable="true" href="#wellbeing-widget" title="Upload Welltory CSV"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">❤️‍🩹</span><span class="label">Upload Welltory</span></a>
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-inbox" data-id="inbox" tabindex="0" draggable="true" href="Inbox/index.html" target="_blank" rel="noopener" title="Open Inbox"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">📥</span><span class="label">Open Inbox</span></a>
+        <a role="listitem" class="quick-launch-item" id="quicklaunch-downloads" data-id="downloads" tabindex="0" draggable="true" href="Downloads/index.html" target="_blank" rel="noopener" title="Open Downloads"><button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">📁</span><span class="label">Downloads</span></a>
+      </div>
+      <!-- Needs attention panel -->
+      <div class="needs-attention-panel" id="needs-attention" aria-live="polite">
+        <h3>Needs attention</h3>
+        <p class="task-meta">Items that need your review or fixes.</p>
+        <ul class="attention-list" id="attention-list"></ul>
+      </div>
+      <div class="custom-quick-actions">
+        <h3>Add your own quick action</h3>
+        <div class="custom-quick-row">
+          <input id="custom-quick-label" type="text" placeholder="Label (e.g., Jira board)" />
+          <input id="custom-quick-url" type="url" placeholder="https:// or file path" />
+          <input id="custom-quick-icon" type="text" placeholder="Icon (emoji or letter)" maxlength="3" />
+          <input id="custom-quick-color" type="color" value="#2563eb" />
+          <button type="button" id="custom-quick-add">Add</button>
+        </div>
+        <p class="task-meta">Saved locally; added to the quick launch grid with drag + pin support.</p>
+      </div>
+      <div class="automation-trigger">
+        <p>Need to run a bigger workflow?</p>
+        <button type="button" id="open-automation-modal" class="linkish">View automation commands</button>
       </div>
       <p class="action-feedback" id="action-feedback" role="status" aria-live="polite"></p>
     </div>
     <div class="panel stats">
-      <div class="stat-row">
-        <span>Inbox items awaiting filing</span>
-        <strong data-stat="inboxCount">--</strong>
-      </div>
-      <div class="stat-row">
-        <span>Family health records</span>
-        <strong data-stat="familyHealthCount">--</strong>
-      </div>
-      <div class="stat-row">
-        <span>Finance docs</span>
-        <strong data-stat="financeCount">--</strong>
-      </div>
-      <div class="stat-row">
-        <span>Active projects (code + docs)</span>
-        <strong data-stat="projectsCount">--</strong>
-      </div>
+      <dl class="stat-list">
+        <div class="stat-row">
+          <dt>Inbox items awaiting filing</dt>
+          <dd>
+            <strong data-stat="inboxCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Family health records</dt>
+          <dd>
+            <strong data-stat="familyHealthCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Finance docs</dt>
+          <dd>
+            <strong data-stat="financeCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Active projects (code + docs)</dt>
+          <dd>
+            <strong data-stat="projectsCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+      </dl>
     </div>
     <div class="panel stats">
-      <div class="stat-row">
-        <span>Housing & property files</span>
-        <strong data-stat="housingCount">--</strong>
+      <dl class="stat-list">
+        <div class="stat-row">
+          <dt>Housing & property files</dt>
+          <dd>
+            <strong data-stat="housingCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Media assets</dt>
+          <dd>
+            <strong data-stat="mediaCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Archive entries</dt>
+          <dd>
+            <strong data-stat="archiveCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+        <div class="stat-row">
+          <dt>Templates ready</dt>
+          <dd>
+            <strong data-stat="templatesCount">--</strong>
+            <div class="stat-meter"><span></span></div>
+          </dd>
+        </div>
+      </dl>
+    </div>
+    <div class="stat-insights">
+      <article class="stat-insight-card">
+        <span class="stat-label">Total storage</span>
+        <strong data-insight="lifehubSize">--</strong>
+        <small>LifeHub folder size</small>
+      </article>
+      <article class="stat-insight-card">
+        <span class="stat-label">Inbox change</span>
+        <strong data-insight="inboxChange">--</strong>
+        <small>Week over week</small>
+      </article>
+      <article class="stat-insight-card">
+        <span class="stat-label">Action items</span>
+        <strong data-insight="actionItems">--</strong>
+        <small>Inbox + Downloads backlog</small>
+      </article>
+    </div>
+    <div class="panel inbox-health-panel" id="inbox-health-panel">
+      <div class="inbox-health-header">
+        <h2>Inbox health</h2>
+        <p class="task-meta" id="inbox-health-summary">Tracking weekly adds vs clears.</p>
       </div>
-      <div class="stat-row">
-        <span>Media assets</span>
-        <strong data-stat="mediaCount">--</strong>
+      <div class="inbox-health-chart" id="inbox-health-chart" role="img" aria-label="Inbox files added versus cleared over the last four weeks"></div>
+      <p class="task-meta inbox-health-footnote">Based on dashboard stats snapshots captured during refreshes.</p>
+    </div>
+    <div class="panel today-panel" id="today-panel">
+      <div class="today-header">
+        <h2>Today</h2>
+        <span id="agenda-date">--</span>
       </div>
-      <div class="stat-row">
-        <span>Archive entries</span>
-        <strong data-stat="archiveCount">--</strong>
+      <div class="today-content">
+        <div>
+          <h3>Calendar</h3>
+          <ul id="agenda-events" aria-live="polite"></ul>
+        </div>
+        <div>
+          <h3>Reminders</h3>
+          <ul id="agenda-reminders" aria-live="polite"></ul>
+        </div>
+        <div class="agenda-upload">
+          <h3>Calendar upload</h3>
+          <p class="task-meta">Drop a fresh .ics export here instead of copying files.</p>
+          <label class="agenda-upload-trigger">
+            <input type="file" accept=".ics,text/calendar" id="agenda-upload-input" />
+            <span>Upload .ics</span>
+          </label>
+          <button type="button" id="agenda-upload-clear" class="ghost">Clear uploaded file</button>
+          <p class="task-meta" id="agenda-upload-status">Using Resources/calendar.ics</p>
+        </div>
       </div>
-      <div class="stat-row">
-        <span>Templates ready</span>
-        <strong data-stat="templatesCount">--</strong>
+      <p class="today-footnote" id="agenda-status">Loading agenda…</p>
+    </div>
+  </section>
+
+  <section class="panel copilot-panel" id="copilot-panel" data-kiosk-highlight="search">
+    <div class="copilot-header">
+      <div>
+        <h2>LifeHub Copilot</h2>
+        <p>Ask in everyday language and Copilot will search folders, tags, and recent files for you.</p>
+      </div>
+      <span class="copilot-hint">Shortcuts: <code>/</code> search • <code>⌘T</code> triage • <code>⌘S</code> search • <code>⌘R</code> refresh • <code>?</code> help</span>
+    </div>
+    <label for="copilot-input" class="visually-hidden">Ask Copilot</label>
+    <div class="copilot-input-row">
+      <input id="copilot-input" type="text" placeholder="e.g., show medical invoices from 2024" autocomplete="off" />
+      <button type="button" id="copilot-clear" class="ghost">Clear</button>
+    </div>
+    <p class="task-meta">Copilot understands folder names, tags (health, finance, projects), or actions ("copy downloads command").</p>
+    <ol id="copilot-results" class="copilot-results" aria-live="polite"></ol>
+  </section>
+
+  <section class="panel automation-scheduler" id="automation-scheduler-panel">
+    <div class="automation-scheduler-header">
+      <div>
+        <h2>Automation Scheduler</h2>
+        <p>Queue LifeHub scripts, run them as a batch, and keep the last-run log handy.</p>
+      </div>
+      <span class="status-chip" id="automation-runner-status" aria-live="polite">Runner: checking…</span>
+      <div class="automation-inline-controls">
+        <label class="toggle-chip">
+          <input type="checkbox" id="automation-dry-run" />
+          <span>Dry run (simulate)</span>
+        </label>
+        <button type="button" id="automation-run-last" class="ghost" title="Queue and run your last saved batch">Run last queue</button>
+      </div>
+      <div class="scheduler-actions">
+        <button type="button" id="automation-start" disabled>Run queue</button>
+        <button type="button" id="automation-clear" class="ghost">Clear queue</button>
       </div>
     </div>
+    <div class="scheduler-grid">
+      <section>
+        <h3>Available automations</h3>
+        <ul id="automation-scheduler-list" class="automation-scheduler-list"></ul>
+      </section>
+      <section>
+        <h3>Queued runs</h3>
+        <ol id="automation-queue" class="automation-queue" aria-live="polite"></ol>
+        <p id="automation-status" class="task-meta">Pick at least one automation to start a batch.</p>
+      </section>
+      <section class="automation-presets">
+        <h3>Saved routines</h3>
+        <p class="task-meta" id="automation-presets-status">Save the current queue for one-click reuse.</p>
+        <ul id="automation-presets-list" class="automation-presets-list"></ul>
+      <div class="automation-presets-form">
+        <label for="automation-preset-name">Save current queue as a preset</label>
+        <div class="automation-presets-row">
+          <input type="text" id="automation-preset-name" placeholder="e.g., Weekly sweep" />
+          <button type="button" id="automation-save-preset" disabled>Save preset</button>
+        </div>
+        <p class="task-meta">Presets append their automations to the queue in the order saved.</p>
+      </div>
+      <div class="automation-presets-form">
+        <label for="automation-preset-import">Import presets (JSON)</label>
+        <div class="automation-presets-row">
+          <input type="file" id="automation-preset-import" accept="application/json" />
+          <button type="button" id="automation-preset-export" class="ghost">Export presets</button>
+        </div>
+        <p class="task-meta">Import/export keeps your routines portable across browsers.</p>
+      </div>
+    </section>
+    <section class="scheduler-log">
+      <h3>Last run log</h3>
+      <ul id="automation-log"></ul>
+    </section>
+    </div>
+  </section>
+
+  <section class="panel health-panel" id="health-panel">
+    <div class="health-header">
+      <div>
+        <h2>System Health</h2>
+        <p>Freshness of key data sources and services.</p>
+      </div>
+      <button type="button" id="health-refresh">Refresh all</button>
+    </div>
+    <ul class="health-list" id="health-list">
+      <li>Loading health checks…</li>
+    </ul>
+  </section>
+
+  <section class="panel timeline-panel" id="timeline-panel" data-kiosk-highlight="timeline">
+    <div class="timeline-header">
+      <div>
+        <h2>Activity Timeline</h2>
+        <p>Calendar events, reminders, and file changes blended into one strip.</p>
+      </div>
+      <div class="timeline-controls">
+        <div class="timeline-filters" role="group" aria-label="Timeline filters">
+          <label><input type="checkbox" data-timeline-filter="events" checked /> Events</label>
+          <label><input type="checkbox" data-timeline-filter="reminders" checked /> Reminders</label>
+          <label><input type="checkbox" data-timeline-filter="files" checked /> Files</label>
+          <label><input type="checkbox" data-timeline-filter="downloads" checked /> Downloads</label>
+          <label><input type="checkbox" data-timeline-filter="automations" checked /> Automations</label>
+          <label><input type="checkbox" data-timeline-filter="wellbeing" checked /> Wellbeing</label>
+          <label><input type="checkbox" data-timeline-filter="backups" checked /> Backups</label>
+        </div>
+        <button type="button" id="timeline-refresh">Refresh</button>
+      </div>
+    </div>
+    <ol id="activity-timeline" class="activity-timeline" aria-live="polite"></ol>
+    <p id="timeline-empty" class="task-meta">Loading timeline…</p>
+  </section>
+
+  <section class="panel recent-files" id="recent-files-panel">
+    <div class="recent-header">
+      <div>
+        <h2>Recent Files</h2>
+        <p>Latest updates in each area (refresh for current list).</p>
+      </div>
+      <button type="button" id="recent-refresh">Refresh</button>
+    </div>
+    <div class="recent-grid" id="recent-grid" aria-live="polite"></div>
   </section>
 
   <section class="panel wellbeing" id="wellbeing-widget">
@@ -78,41 +399,272 @@
       <span class="wellbeing-source" id="wellbeing-source">Latest Welltory export</span>
     </div>
     <p class="wellbeing-meta">Last measurement: <span id="wellbeing-latest">--</span></p>
+    <p class="wellbeing-meta" id="wellbeing-trend-summary">Waiting for previous uploads to compare trends.</p>
     <div class="wellbeing-grid">
       <div>
         <span class="wellbeing-label">Stress (avg)</span>
         <strong id="wellbeing-stress">--</strong>
+        <span class="wellbeing-delta" id="wellbeing-stress-delta">—</span>
       </div>
       <div>
         <span class="wellbeing-label">Energy (avg)</span>
         <strong id="wellbeing-energy">--</strong>
+        <span class="wellbeing-delta" id="wellbeing-energy-delta">—</span>
       </div>
       <div>
         <span class="wellbeing-label">Focus (avg)</span>
         <strong id="wellbeing-focus">--</strong>
+        <span class="wellbeing-delta" id="wellbeing-focus-delta">—</span>
       </div>
       <div>
         <span class="wellbeing-label">Measurements</span>
         <strong id="wellbeing-count">--</strong>
+        <span class="wellbeing-delta" id="wellbeing-count-delta">—</span>
+      </div>
+    </div>
+    <div class="health-snapshot" aria-hidden="false">
+      <div class="health-card">
+        <span>Sleep</span>
+        <div class="metric" id="sleep-hrs">-- hrs</div>
+        <button class="cta" id="log-sleep">Log sleep</button>
+      </div>
+      <div class="health-card">
+        <span>Movement</span>
+        <div class="metric" id="steps-count">-- steps</div>
+        <button class="cta" id="view-activity">View activity</button>
+      </div>
+      <div class="health-card">
+        <span>Nutrition</span>
+        <div class="metric" id="nutrition-score">--</div>
+        <button class="cta" id="log-nutrition">Log meal</button>
+      </div>
+      <div class="health-card">
+        <span>Latest HRV</span>
+        <div class="metric" id="latest-hrv">--</div>
+        <button class="cta" id="open-welltory-upload">Upload CSV</button>
+      </div>
+    </div>
+    <div class="wellbeing-upload" style="margin-top:12px;">
+      <h3>Import Welltory CSV</h3>
+      <p class="task-meta">Upload a Welltory export (.csv) to update the wellbeing snapshot shown above.</p>
+      <label class="welltory-upload-trigger" style="display:inline-block;">
+        <input type="file" accept=".csv,text/csv" id="welltory-upload-input" style="display:none;" />
+        <button type="button" id="welltory-upload-pick" class="ghost">Choose file…</button>
+      </label>
+      <button type="button" id="welltory-upload-button">Upload</button>
+      <p id="welltory-upload-status" class="task-meta">Uploader status: <span id="welltory-uploader-state">unknown</span></p>
+      <p class="task-meta">If the uploader isn't running, start it from the LifeHub repo:
+        <code>python3 scripts/welltory_uploader.py</code>
+      </p>
+      <!-- Modal: offer one-click copy of the start command and a download link to the .command launcher -->
+      <div id="welltory-start-modal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:18px; border-radius:8px; max-width:680px; width:90%;">
+          <h4>Start LifeHub local services</h4>
+          <p>To enable one-click upload, start the local uploader + static server. Use this command in Terminal or double-click the launcher file in Finder.</p>
+          <pre id="welltory-start-cmd" style="background:#f3f3f3; padding:8px; border-radius:4px;">bash "/Users/joshualukeparris/LifeHub/scripts/start_welltory_local.sh"</pre>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button id="welltory-copy-cmd">Copy command</button>
+            <a id="welltory-download-launcher" href="scripts/start_welltory_local.command" download>Download launcher</a>
+            <a id="welltory-download-installer" href="scripts/install_welltory_uploader.command" download style="display:none;">Installer</a>
+            <button id="welltory-install-btn">Download & install uploader</button>
+            <button id="welltory-start-close" class="ghost">Close</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <section class="panel checklist">
     <h2>Weekly LifeHub Routine</h2>
-    <div class="checklist-tabs">
-      <button type="button" class="tab active" data-cadence-tab="All">All</button>
-      <button type="button" class="tab" data-cadence-tab="Weekly">Weekly</button>
-      <button type="button" class="tab" data-cadence-tab="Quarterly">Quarterly</button>
+    <div class="checklist-tabs" role="tablist" aria-label="Checklist cadence">
+      <button type="button" class="tab active" data-cadence-tab="All" role="tab" id="cadence-tab-all" aria-selected="true" aria-controls="task-panel">All</button>
+      <button type="button" class="tab" data-cadence-tab="Weekly" role="tab" id="cadence-tab-weekly" aria-selected="false" aria-controls="task-panel" tabindex="-1">Weekly</button>
+      <button type="button" class="tab" data-cadence-tab="Quarterly" role="tab" id="cadence-tab-quarterly" aria-selected="false" aria-controls="task-panel" tabindex="-1">Quarterly</button>
     </div>
-    <p class="task-summary" id="task-summary">--</p>
-    <ul id="task-list"></ul>
+    <div id="task-panel" role="tabpanel" aria-labelledby="cadence-tab-all">
+      <p class="task-summary" id="task-summary">--</p>
+      <div class="task-sparkline" id="task-sparkline" aria-hidden="true"></div>
+      <ul id="task-list"></ul>
+    </div>
     <div class="checklist-controls">
       <button id="reset-tasks" type="button">Reset checklist</button>
     </div>
   </section>
 
   <section class="grid" id="card-grid" aria-live="polite"></section>
+
+  <section class="panel spotlight" id="resource-spotlight">
+    <div class="spotlight-header">
+      <div>
+        <h2>Resource Spotlight</h2>
+        <p>Surface a helpful template or doc each week.</p>
+      </div>
+      <div class="spotlight-controls">
+        <button type="button" id="spotlight-prev" aria-label="Previous resource">←</button>
+        <button type="button" id="spotlight-next" aria-label="Next resource">→</button>
+      </div>
+    </div>
+    <article id="spotlight-card" class="spotlight-card" aria-live="polite"></article>
+  </section>
+
+  <section class="panel playables" id="playables">
+    <div class="playables-header">
+      <div>
+        <h2>Playable Projects</h2>
+        <p>Launch any build straight from LifeHub. Copy the command or open the folder.</p>
+      </div>
+      <span class="playables-count" id="playables-count"></span>
+    </div>
+    <div class="playables-grid" id="playables-grid"></div>
+  </section>
+
+  <section class="panel triage-panel" id="triage-panel" data-kiosk-highlight="triage">
+    <div class="triage-header">
+      <div>
+        <h2>Inbox Triage Board</h2>
+        <p>Drag each Inbox item into its destination column or use the "Send to" picker.</p>
+      </div>
+      <button type="button" id="triage-reset" class="ghost">Reset board</button>
+    </div>
+    <div class="triage-grid" id="triage-grid" aria-live="polite"></div>
+  </section>
+
+  <section class="panel downloads-panel" id="downloads-panel" data-kiosk-highlight="downloads">
+    <div class="downloads-header">
+      <div>
+        <h2>Downloads Watcher</h2>
+        <p>Highlights anything stuck outside LifeHub for longer than a day.</p>
+      </div>
+      <div class="downloads-actions">
+        <button type="button" id="downloads-refresh">Retry Load</button>
+        <a class="ghost" href="../Downloads/index.html" target="_blank" rel="noopener">Open Downloads index</a>
+      </div>
+    </div>
+    <p id="downloads-status" class="task-meta">Checking Downloads…</p>
+    <ol id="downloads-list" class="downloads-list"></ol>
+  </section>
+  <section class="panel downloads-triage-panel" id="downloads-triage-panel">
+    <div class="downloads-triage-header">
+      <div>
+        <h2>Downloads auto-triage</h2>
+        <p>Heuristics suggest where to file lingering downloads. One click moves them into place.</p>
+      </div>
+      <button type="button" id="downloads-triage-refresh" class="ghost">Refresh suggestions</button>
+    </div>
+    <p id="downloads-triage-status" class="task-meta">Gathering suggestions…</p>
+    <ul id="downloads-triage-list" class="downloads-triage-list"></ul>
+  </section>
+
+  <section class="panel resurface-panel" id="resurface-panel" data-kiosk-highlight="resurface">
+    <div class="resurface-header">
+      <div>
+        <h2>Resurface Carousel</h2>
+        <p>Files untouched for ~90 days bubble up here so you can archive or revive them.</p>
+      </div>
+      <div class="resurface-controls">
+        <select id="resurface-filter">
+          <option value="all">All areas</option>
+          <option value="Work">Work</option>
+          <option value="Family">Family</option>
+          <option value="Finance">Finance</option>
+          <option value="Housing">Housing</option>
+          <option value="Personal">Personal</option>
+          <option value="Projects">Projects</option>
+          <option value="Hobbies">Hobbies</option>
+          <option value="Media">Media</option>
+          <option value="Archive">Archive</option>
+        </select>
+        <button type="button" id="resurface-snooze" class="ghost">Snooze 30d</button>
+        <button type="button" id="resurface-skip" class="ghost">Skip</button>
+        <button type="button" id="resurface-prev" aria-label="Previous suggestion">←</button>
+        <button type="button" id="resurface-next" aria-label="Next suggestion">→</button>
+      </div>
+    </div>
+    <article id="resurface-card" class="resurface-card" aria-live="polite"></article>
+  </section>
+
+  <section class="panel scratchpad-panel" id="scratchpad-panel">
+    <div class="scratchpad-header">
+      <div>
+        <h2>Project Scratchpad</h2>
+        <p>Quick notes stay in your browser until you promote them into LifeHub.</p>
+      </div>
+      <span class="scratchpad-status" id="scratchpad-status">Unsaved</span>
+    </div>
+    <label for="scratchpad-input" class="visually-hidden">Scratchpad</label>
+    <textarea id="scratchpad-input" rows="6" placeholder="Drop ideas, commands, or journaling here..."></textarea>
+    <div class="scratchpad-controls">
+      <button type="button" id="scratchpad-promote">Promote to LifeHub</button>
+      <button type="button" id="scratchpad-copy">Copy text</button>
+      <button type="button" id="scratchpad-download">Download .md</button>
+      <button type="button" id="scratchpad-clear" class="ghost">Clear</button>
+    </div>
+  </section>
+
+  <section class="panel backup-panel" id="backup-panel" data-kiosk-highlight="backup">
+    <div class="backup-header">
+      <div>
+        <h2>Backup Integrity</h2>
+        <p>Know when each LifeHub replica last synced and how to verify it.</p>
+      </div>
+      <button type="button" id="backup-refresh" class="ghost">Refresh</button>
+    </div>
+    <ul id="backup-list" class="backup-list" aria-live="polite"></ul>
+  </section>
+
+  <section class="panel text-game" id="text-game-panel">
+    <div class="text-game-header">
+      <div>
+        <h2>Fun Text Based Game 2025 (Browser)</h2>
+        <p>Runs the full Python adventure right here via Pyodide — needs a quick internet download the first time.</p>
+      </div>
+      <button type="button" id="text-game-start">Start Game</button>
+    </div>
+    <p class="text-game-status" id="text-game-status">Click “Start Game” to load the Python runtime (~10 MB download from CDN).</p>
+    <div class="text-game-console" id="text-game-output" aria-live="polite"></div>
+    <form id="text-game-form" class="text-game-form">
+      <input id="text-game-input" type="text" placeholder="Type a command (e.g., look, move e, unlock, talk, 1)" autocomplete="off" disabled />
+      <button type="submit" disabled>Send</button>
+    </form>
+    <div class="text-game-save-controls">
+      <label for="text-game-slot">Save slot</label>
+      <select id="text-game-slot">
+        <option value="slotA">Slot A</option>
+        <option value="slotB">Slot B</option>
+        <option value="slotC">Slot C</option>
+      </select>
+      <button type="button" data-game-save="base">Save</button>
+      <button type="button" data-game-load="base">Load</button>
+      <span class="text-game-save-status" id="text-game-save-status"></span>
+    </div>
+  </section>
+
+  <section class="panel text-game" id="text-game-v2-panel">
+    <div class="text-game-header">
+      <div>
+        <h2>Fun Text Based Game 2025 v2 (Browser)</h2>
+        <p>Play the expanded sandbox build (journals, crafting, Wilds) with zero setup — requires a short Pyodide download.</p>
+      </div>
+      <button type="button" id="text-game-v2-start">Start v2</button>
+    </div>
+    <p class="text-game-status" id="text-game-v2-status">Click “Start v2” to load the updated runtime (~10 MB download from CDN).</p>
+    <div class="text-game-console" id="text-game-v2-output" aria-live="polite"></div>
+    <form id="text-game-v2-form" class="text-game-form">
+      <input id="text-game-v2-input" type="text" placeholder="Type a command (e.g., look, move e, unlock, talk, 1)" autocomplete="off" disabled />
+      <button type="submit" disabled>Send</button>
+    </form>
+    <div class="text-game-save-controls">
+      <label for="text-game-v2-slot">Save slot</label>
+      <select id="text-game-v2-slot">
+        <option value="slotA">Slot A</option>
+        <option value="slotB">Slot B</option>
+        <option value="slotC">Slot C</option>
+      </select>
+      <button type="button" data-game-save="v2">Save</button>
+      <button type="button" data-game-load="v2">Load</button>
+      <span class="text-game-save-status" id="text-game-v2-save-status"></span>
+    </div>
+  </section>
 
   <section class="panel detail" id="detail-view" aria-live="polite">
     <div class="detail-header">
@@ -136,10 +688,704 @@
     <div class="detail-root" id="detail-root"></div>
   </section>
 
+  <div class="automation-modal" id="automation-modal" aria-hidden="true">
+    <div class="automation-dialog" role="dialog" aria-modal="true" aria-labelledby="automation-title">
+      <div class="automation-dialog-header">
+        <div>
+          <h2 id="automation-title">Automation Commands</h2>
+          <p>Review and copy commands to run in Terminal.</p>
+        </div>
+        <button type="button" class="close-button" id="automation-close" aria-label="Close automation modal">×</button>
+      </div>
+      <ul id="automation-list" class="automation-list"></ul>
+    </div>
+  </div>
+
+  <div class="command-palette" id="command-palette" aria-hidden="true">
+    <div class="command-dialog" role="dialog" aria-modal="true" aria-labelledby="command-title">
+      <div class="command-header">
+        <div>
+          <h2 id="command-title">Command Palette</h2>
+          <p>Jump to sections, run quick actions, or filter cards.</p>
+        </div>
+        <button type="button" class="close-button" id="command-close" aria-label="Close command palette">×</button>
+      </div>
+      <label class="visually-hidden" for="command-input">Search commands</label>
+      <input id="command-input" type="search" placeholder="Type a command or shortcut…" autocomplete="off" />
+      <ul id="command-results"></ul>
+    </div>
+  </div>
+
+  <div class="timeline-modal" id="timeline-modal" aria-hidden="true">
+    <div class="timeline-dialog" role="dialog" aria-modal="true" aria-labelledby="timeline-modal-title">
+      <div class="timeline-dialog-header">
+        <div>
+          <h2 id="timeline-modal-title">Timeline detail</h2>
+          <p id="timeline-modal-meta" class="task-meta"></p>
+        </div>
+        <button type="button" class="close-button" id="timeline-modal-close" aria-label="Close timeline detail">×</button>
+      </div>
+      <div id="timeline-modal-body"></div>
+    </div>
+  </div>
+
+  </main>
+
   <footer>
-    Tip: add this dashboard to your browser favourites or set it as Safari’s start page for one-click access to every LifeHub area. Update the quick stats whenever you finish a filing session (⌘+F to edit numbers). Shortcuts: `/` focuses search, I=Inbox, W=Work, F=Family, P=Projects, H=Hobbies, A=Archive.
+    Tip: add this dashboard to your browser favourites or set it as Safari’s start page for one-click access to every LifeHub area. Update the quick stats whenever you finish a filing session (⌘+F to edit numbers). Shortcuts: `/` focuses search, I=Inbox, W=Work, F=Family, P=Projects, H=Hobbies, A=Archive, `?` opens the command palette.
   </footer>
+  <button type="button" id="back-to-top" class="back-to-top" aria-label="Back to top">↑</button>
   <script src="dashboard-data.js"></script>
+  <script src="dashboard-inline-data.js" defer></script>
+  <script src="text-game-sources.js" defer></script>
   <script src="dashboard.js" defer></script>
+  <script src="scripts/apply_settings.js" defer></script>
+
+  <script>
+  // Welltory uploader integration: attempts to POST selected CSV to local uploader
+  document.addEventListener('DOMContentLoaded', function () {
+    const pick = document.getElementById('welltory-upload-pick');
+    const input = document.getElementById('welltory-upload-input');
+    const uploadBtn = document.getElementById('welltory-upload-button');
+    const status = document.getElementById('welltory-upload-status');
+    const stateSpan = document.getElementById('welltory-uploader-state');
+    const wellbeingPanel = document.getElementById('wellbeing-widget');
+    const wellbeingLatestEl = document.getElementById('wellbeing-latest');
+    const wellbeingCountEl = document.getElementById('wellbeing-count');
+    const WELLBEING_FLASH_CLASS = 'wellbeing-flash';
+
+    const UPLOADER_URL = 'http://127.0.0.1:8008/upload';
+    const automationRunnerUrl = window.LIFEHUB_AUTOMATION_URL || 'http://127.0.0.1:8766/run';
+    const welltoryAutomationTask = {
+      id: 'start-welltory-uploader',
+      label: 'Start Welltory uploader',
+      command: 'bash scripts/start_welltory_daemon.sh'
+    };
+    let isAutoStartingWelltory = false;
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const summaryLinkHtml = ' <a href="welltory-summary.json" target="_blank" rel="noopener">View summary</a>';
+
+    function flashWellbeingPanel() {
+      if (!wellbeingPanel) return;
+      wellbeingPanel.classList.remove(WELLBEING_FLASH_CLASS);
+      void wellbeingPanel.offsetWidth;
+      wellbeingPanel.classList.add(WELLBEING_FLASH_CLASS);
+      window.setTimeout(() => wellbeingPanel.classList.remove(WELLBEING_FLASH_CLASS), 1500);
+    }
+
+    function buildWellbeingStatusText() {
+      const latest = (wellbeingLatestEl?.textContent || '').trim();
+      const countText = (wellbeingCountEl?.textContent || '').trim();
+      const parts = [];
+      if (latest && latest !== '--' && latest.toLowerCase() !== 'no data' && latest.toLowerCase() !== 'summary unavailable') {
+        parts.push(`Latest ${latest}`);
+      }
+      if (countText && countText !== '--') {
+        const numeric = Number(countText.replace(/[^0-9.]/g, ''));
+        if (Number.isFinite(numeric)) {
+          parts.push(`${numeric} measurement${numeric === 1 ? '' : 's'}`);
+        } else {
+          parts.push(`${countText} measurements`);
+        }
+      }
+      return parts.length ? `Upload complete — ${parts.join(' · ')}.` : 'Upload complete — wellbeing snapshot refreshed.';
+    }
+
+    async function refreshWellbeingSnapshotAfterUpload() {
+      if (status) status.textContent = 'Upload complete — refreshing wellbeing snapshot…';
+      if (typeof window.loadWellbeing === 'function') {
+        try {
+          await window.loadWellbeing();
+        } catch (err) {
+          console.warn('Unable to refresh wellbeing snapshot', err);
+        }
+      }
+      if (status) {
+        status.innerHTML = `${buildWellbeingStatusText()}${summaryLinkHtml}`;
+      }
+      flashWellbeingPanel();
+    }
+
+    async function checkUploader() {
+      try {
+        const res = await fetch(UPLOADER_URL, { method: 'OPTIONS', mode: 'cors' });
+        stateSpan.textContent = res.ok ? 'running' : 'reachable';
+        return res.ok;
+      } catch (err) {
+        stateSpan.textContent = 'not reachable';
+        return false;
+      }
+    }
+
+    async function startWelltoryViaAutomation(message) {
+      if (isAutoStartingWelltory) return false;
+      if (status && message) status.textContent = message;
+      isAutoStartingWelltory = true;
+      try {
+        const response = await fetch(automationRunnerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks: [welltoryAutomationTask] })
+        });
+        if (!response.ok) throw new Error(`Automation runner returned ${response.status}`);
+        const payload = await response.json();
+        const run = Array.isArray(payload?.runs) ? payload.runs[0] : null;
+        if (run && run.exitCode === 0) {
+          stateSpan.textContent = 'starting';
+          await wait(1300);
+          return checkUploader();
+        }
+        if (status) status.textContent = 'Automation runner could not start the uploader.';
+        return false;
+      } catch (err) {
+        console.error('Unable to auto-start Welltory uploader', err);
+        if (status) status.textContent = 'Automation runner offline — start automation_server.py.';
+        return false;
+      } finally {
+        isAutoStartingWelltory = false;
+      }
+    }
+
+    async function uploadWelltoryFile(file) {
+      const form = new FormData();
+      form.append('file', file, file.name);
+      let res;
+      try {
+        res = await fetch(UPLOADER_URL, { method: 'POST', body: form });
+      } catch (err) {
+        err.isNetworkError = true;
+        throw err;
+      }
+      const text = await res.text();
+      if (!res.ok) {
+        const error = new Error(text || res.statusText || 'Upload failed');
+        error.http = true;
+        error.responseText = text;
+        throw error;
+      }
+      return text;
+    }
+
+    // initial check
+    checkUploader();
+
+    // Modal controls
+    const startModal = document.getElementById('welltory-start-modal');
+    const copyBtn = document.getElementById('welltory-copy-cmd');
+    const downloadLink = document.getElementById('welltory-download-launcher');
+    const closeBtn = document.getElementById('welltory-start-close');
+    const startCmdPre = document.getElementById('welltory-start-cmd');
+
+    copyBtn && copyBtn.addEventListener('click', async () => {
+      const txt = startCmdPre.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(txt);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.textContent = 'Copy command'; }, 1500);
+      } catch (e) {
+        alert('Copy failed — please copy manually: ' + txt);
+      }
+    });
+    closeBtn && closeBtn.addEventListener('click', () => { startModal.style.display = 'none'; });
+
+    // Installer download + guidance
+    const installBtn = document.getElementById('welltory-install-btn');
+    const installAnchor = document.getElementById('welltory-download-installer');
+    installBtn && installBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Trigger download of the .command installer
+      if (installAnchor) {
+        installAnchor.click();
+        // Show a short instruction to the user
+        alert('Downloaded the installer. Locate "install_welltory_uploader.command" in your Downloads folder (or the browser download location), then double-click it in Finder to install and start the uploader. You may need to allow it in System Preferences → Security & Privacy.');
+      } else {
+        alert('Installer not available in the dashboard directory.');
+      }
+    });
+
+    // Try to fetch a detected venv hint (written by the installer) and show a suggested install command
+    const venvHintEl = document.createElement('div');
+    venvHintEl.id = 'welltory-venv-hint';
+    venvHintEl.style.marginTop = '8px';
+    const modalBody = startModal?.querySelector('div');
+    modalBody && modalBody.appendChild(venvHintEl);
+    (async function loadVenvHint() {
+      try {
+        const res = await fetch('scripts/venv_detected.txt');
+        if (!res.ok) return;
+        const txt = (await res.text()).trim();
+        if (!txt) return;
+        // Show suggestion to use this python
+        venvHintEl.innerHTML = `<p class="task-meta">Detected python: <code>${txt}</code></p><p class="task-meta"><button id="welltory-copy-install-cmd" class="ghost">Copy install command using detected python</button></p>`;
+        const copyCmdBtn = document.getElementById('welltory-copy-install-cmd');
+        copyCmdBtn && copyCmdBtn.addEventListener('click', async () => {
+          const cmd = `bash "${location.pathname.replace(/\/[^/]*$/, '')}/scripts/install_welltory_uploader.sh" "${txt}"`;
+          try { await navigator.clipboard.writeText(cmd); copyCmdBtn.textContent = 'Copied!'; setTimeout(() => copyCmdBtn.textContent = 'Copy install command using detected python', 1500); } catch (e) { alert('Copy failed — use this command:\n' + cmd); }
+        });
+      } catch (e) { /* ignore */ }
+    })();
+
+    pick.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => {
+      const f = input.files[0];
+      if (f) {
+        const s = status.querySelector('span');
+        if (s) s.textContent = `ready: ${f.name}`;
+      }
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      const f = input.files[0];
+      if (!f) { alert('Choose a Welltory CSV file first.'); return; }
+      uploadBtn.disabled = true;
+      status.textContent = 'Uploading…';
+      try {
+        await uploadWelltoryFile(f);
+        await refreshWellbeingSnapshotAfterUpload();
+      } catch (err) {
+        const isNetworkError = err && (err.isNetworkError || err.name === 'TypeError');
+        if (isNetworkError) {
+          const started = await startWelltoryViaAutomation('Uploader offline — starting it now…');
+          if (started) {
+            status.textContent = 'Uploader started — retrying upload…';
+            try {
+              await uploadWelltoryFile(f);
+              await refreshWellbeingSnapshotAfterUpload();
+            } catch (retryErr) {
+              console.error('Retry upload failed', retryErr);
+              status.innerHTML = 'Upload failed after restart: ' + (retryErr.message || 'Unknown error');
+            }
+          } else {
+            status.textContent = 'Error: uploader not reachable.';
+            if (startModal) startModal.style.display = 'flex';
+          }
+        } else {
+          status.innerHTML = 'Upload failed: ' + (err?.message || 'Unknown error');
+        }
+      } finally {
+        uploadBtn.disabled = false;
+        checkUploader();
+      }
+    });
+
+    // Quick Launch: helpers, drag/drop, pinning, keyboard activation and persistence
+    const qGrid = document.getElementById('quick-launch-grid');
+    const actionFeedbackEl = document.getElementById('action-feedback');
+    const storageKeyOrder = 'lh_quicklaunch_order';
+    const storageKeyPinned = 'lh_quicklaunch_pinned';
+
+    const getQuickLaunchHref = (item) => {
+      return (item.dataset.href || item.getAttribute('href') || '').trim();
+    };
+
+    const announceQuickLaunch = (message) => {
+      if (!message) return;
+      if (typeof window.setActionFeedback === 'function') {
+        window.setActionFeedback(message);
+      } else if (actionFeedbackEl) {
+        actionFeedbackEl.textContent = message;
+      }
+    };
+
+    const openQuickLaunchTarget = (target) => {
+      if (!target) return false;
+      const newWin = window.open(target, '_blank', 'noopener');
+      if (!newWin) window.location.href = target;
+      return true;
+    };
+
+    function handleQuickLaunchNavigation(item) {
+      const href = getQuickLaunchHref(item);
+      if (!href || href === '#') return false;
+      if (href.startsWith('#')) {
+        try {
+          const target = document.querySelector(href);
+          if (!target) return false;
+          target.scrollIntoView({ behavior: 'smooth' });
+          if (href === '#wellbeing-widget') {
+            document.getElementById('welltory-upload-pick')?.click();
+            announceQuickLaunch('Select a Welltory CSV to upload.');
+          } else if (href === '#scratchpad-panel') {
+            setTimeout(() => { document.getElementById('scratchpad-input')?.focus(); }, 200);
+            announceQuickLaunch('Scratchpad ready for a quick note.');
+          }
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+      if (href.startsWith('mailto:') || href.startsWith('http') || href.includes('.html') || href.endsWith('/')) {
+        openQuickLaunchTarget(href);
+        return true;
+      }
+      return false;
+    }
+
+    function handleQuickLaunchFallback(item) {
+      const id = item.dataset.id;
+      switch (id) {
+        case 'start-timer':
+          openQuickLaunchTarget('https://timer-tab.com/');
+          announceQuickLaunch('Opening a browser timer — switch tabs to start your focus session.');
+          break;
+        case 'log-expense':
+          openQuickLaunchTarget('Finance/index.html');
+          announceQuickLaunch('Opening Finance so you can drop the receipt or update the ledger.');
+          break;
+        case 'welltory':
+          document.getElementById('wellbeing-widget')?.scrollIntoView({ behavior: 'smooth' });
+          document.getElementById('welltory-upload-pick')?.click();
+          announceQuickLaunch('Select a Welltory CSV to upload.');
+          startWelltoryViaAutomation('Starting uploader for quick launch…');
+          break;
+        case 'new-note':
+          setTimeout(() => { document.getElementById('scratchpad-input')?.focus(); }, 200);
+          announceQuickLaunch('Scratchpad ready for a quick note.');
+          break;
+        case 'inbox':
+          openQuickLaunchTarget('Inbox/index.html');
+          announceQuickLaunch('Opening Inbox in a new tab.');
+          break;
+        case 'downloads':
+          openQuickLaunchTarget('Downloads/index.html');
+          announceQuickLaunch('Opening Downloads in a new tab.');
+          break;
+        default:
+          announceQuickLaunch('Quick launch item activated.');
+      }
+    }
+
+    function saveOrder() {
+      const ids = Array.from(qGrid.querySelectorAll('.quick-launch-item')).map(n => n.dataset.id);
+      localStorage.setItem(storageKeyOrder, JSON.stringify(ids));
+    }
+    function savePinned(pinnedSet) {
+      localStorage.setItem(storageKeyPinned, JSON.stringify(Array.from(pinnedSet)));
+    }
+    function loadPinned() {
+      try { return new Set(JSON.parse(localStorage.getItem(storageKeyPinned)) || []); } catch (e) { return new Set(); }
+    }
+    function applyPinned(pinnedSet) {
+      qGrid.querySelectorAll('.quick-launch-item').forEach(it => {
+        const id = it.dataset.id;
+        const pinned = pinnedSet.has(id);
+        it.setAttribute('data-pinned', pinned ? 'true' : 'false');
+        const btn = it.querySelector('.pin-btn');
+        if (btn) btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+      });
+    }
+
+    const pinnedSet = loadPinned();
+    applyPinned(pinnedSet);
+
+    // Make items draggable & keyboard-activatable
+    let dragSrc = null;
+    function attachQuickLaunchItem(item) {
+      item.addEventListener('dragstart', (ev) => { dragSrc = item; item.classList.add('dragging'); ev.dataTransfer.effectAllowed = 'move'; });
+      item.addEventListener('dragend', () => { dragSrc && dragSrc.classList.remove('dragging'); dragSrc = null; saveOrder(); });
+      item.addEventListener('dragover', (ev) => { ev.preventDefault(); qGrid.classList.add('drag-over'); ev.dataTransfer.dropEffect = 'move'; });
+      item.addEventListener('dragleave', () => { qGrid.classList.remove('drag-over'); });
+      item.addEventListener('drop', (ev) => {
+        ev.preventDefault(); qGrid.classList.remove('drag-over');
+        if (!dragSrc || dragSrc === item) return;
+        // insert before the drop target
+        qGrid.insertBefore(dragSrc, item);
+      });
+
+      // keyboard activation
+      item.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault(); item.click();
+        }
+        if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'p') {
+          ev.preventDefault(); togglePin(item);
+        }
+      });
+
+      // click behavior: navigate when possible, otherwise trigger fallback actions
+      item.addEventListener('click', (ev) => {
+        if (handleQuickLaunchNavigation(item)) {
+          ev.preventDefault();
+          return;
+        }
+        handleQuickLaunchFallback(item);
+      });
+
+      // pin button
+      const pin = item.querySelector('.pin-btn');
+      pin && pin.addEventListener('click', (ev) => { ev.stopPropagation(); togglePin(item); });
+    }
+
+    function togglePin(item) {
+      const id = item.dataset.id;
+      if (pinnedSet.has(id)) pinnedSet.delete(id); else pinnedSet.add(id);
+      applyPinned(pinnedSet);
+      savePinned(pinnedSet);
+      // move pinned items to start
+      reorderPinnedFirst();
+      saveOrder();
+    }
+
+    function reorderPinnedFirst() {
+      const nodes = Array.from(qGrid.querySelectorAll('.quick-launch-item'));
+      const pinned = nodes.filter(n => n.getAttribute('data-pinned') === 'true');
+      const others = nodes.filter(n => n.getAttribute('data-pinned') !== 'true');
+      pinned.forEach(n => qGrid.appendChild(n));
+      others.forEach(n => qGrid.appendChild(n));
+    }
+
+    // Load saved order and pinned, then attach base listeners
+    (function restoreQuickLaunch() {
+      const raw = localStorage.getItem(storageKeyOrder);
+      if (raw) {
+        try {
+          const ids = JSON.parse(raw);
+          const map = new Map();
+          qGrid.querySelectorAll('.quick-launch-item').forEach(el => map.set(el.dataset.id, el));
+          ids.forEach(id => {
+            const el = map.get(id);
+            if (el) qGrid.appendChild(el);
+          });
+        } catch (e) { /* ignore */ }
+      }
+      qGrid.querySelectorAll('.quick-launch-item').forEach(attachQuickLaunchItem);
+    })();
+
+    // expose helper for dynamically added quick launch tiles
+    window.lhQuickLaunch = {
+      attach: (el) => attachQuickLaunchItem(el),
+      saveOrder,
+      applyPinned: () => applyPinned(pinnedSet),
+      pinnedSet
+    };
+
+    // Ensure pinned-first ordering initially
+    reorderPinnedFirst();
+    saveOrder();
+
+    // Needs-attention: simple seeded items and dismiss
+    const attentionList = document.getElementById('attention-list');
+    const attentionKey = 'lh_attention_items';
+    function loadAttention() {
+      try { return JSON.parse(localStorage.getItem(attentionKey)) || []; } catch (e) { return []; }
+    }
+    function saveAttention(arr) { localStorage.setItem(attentionKey, JSON.stringify(arr)); }
+    function renderAttention() {
+      const arr = loadAttention();
+      attentionList.innerHTML = '';
+      if (arr.length === 0) {
+        const li = document.createElement('li'); li.className = 'task-meta'; li.textContent = 'All clear — nothing needs attention right now.'; attentionList.appendChild(li); return;
+      }
+      arr.forEach((it, idx) => {
+        const li = document.createElement('li'); li.className = 'attention-item';
+        const span = document.createElement('span'); span.textContent = it.text;
+        const btn = document.createElement('button'); btn.className = 'dismiss'; btn.textContent = 'Dismiss'; btn.addEventListener('click', () => { arr.splice(idx,1); saveAttention(arr); renderAttention(); });
+        li.appendChild(span); li.appendChild(btn); attentionList.appendChild(li);
+      });
+    }
+    // seed sample attention items if none
+    if (loadAttention().length === 0) {
+      saveAttention([
+        { text: 'Welltory import missing — click Upload Welltory' },
+        { text: 'Calendar ICS not updated in 5 days' }
+      ]);
+    }
+    renderAttention();
+
+    // Delegated click handler for quick-launch (robust if elements are overlaid)
+    qGrid && qGrid.addEventListener('click', (ev) => {
+      const clicked = ev.target.closest && ev.target.closest('.quick-launch-item');
+      if (!clicked || !qGrid.contains(clicked)) return;
+      // If pin button clicked, toggle pin
+      if (ev.target.closest && ev.target.closest('.pin-btn')) {
+        ev.preventDefault(); ev.stopPropagation(); togglePin(clicked); return;
+      }
+      // Otherwise perform the same action as the per-item handler
+      const href = clicked.dataset.href;
+      if (href && href.startsWith('#')) {
+        document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+        if (href === '#wellbeing-widget') document.getElementById('welltory-upload-pick')?.click();
+        return;
+      }
+      if (href && (href.startsWith('http') || href.includes('.html'))) {
+        window.open(href, '_blank', 'noopener');
+        return;
+      }
+      // ID fallbacks
+      if (clicked.id === 'quicklaunch-start-timer') { alert('Timer placeholder — implement Pomodoro here'); return; }
+      if (clicked.id === 'quicklaunch-new-note') { setTimeout(() => { document.getElementById('scratchpad-input')?.focus(); }, 150); return; }
+    });
+  });
+  </script>
+
+  <script>
+    // Display, density, accessibility, onboarding, and custom quick actions
+    document.addEventListener('DOMContentLoaded', function () {
+      const body = document.body;
+      const themeSelect = document.getElementById('theme-select');
+      const compactToggle = document.getElementById('compact-toggle');
+      const calmToggle = document.getElementById('calm-toggle');
+      const readableToggle = document.getElementById('readable-font-toggle');
+      const shadowToggle = document.getElementById('shadow-toggle');
+      const customLabel = document.getElementById('custom-quick-label');
+      const customUrl = document.getElementById('custom-quick-url');
+      const customIcon = document.getElementById('custom-quick-icon');
+      const customColor = document.getElementById('custom-quick-color');
+      const customAdd = document.getElementById('custom-quick-add');
+      const qGrid = document.getElementById('quick-launch-grid');
+      const storageKeys = {
+        theme: 'lh_theme_style',
+        compact: 'lh_density_compact',
+        calm: 'lh_mode_calm',
+        readable: 'lh_readable_font',
+        noShadows: 'lh_no_shadows',
+        customQuick: 'lh_custom_quick_actions',
+        onboarding: 'lh_onboarding_seen'
+      };
+
+      function applyTheme(mode) {
+        const modern = mode === 'modern';
+        const classic = mode === 'classic';
+        const contrast = mode === 'contrast';
+        body.classList.toggle('theme-classic', classic);
+        body.classList.toggle('theme-contrast', contrast);
+        if (!classic && !contrast) {
+          body.classList.remove('theme-classic', 'theme-contrast');
+        }
+        if (themeSelect) themeSelect.value = contrast ? 'contrast' : classic ? 'classic' : 'modern';
+        try { localStorage.setItem(storageKeys.theme, themeSelect.value); } catch (e) {}
+      }
+
+      function applyCompact(enabled) {
+        body.classList.toggle('density-compact', enabled);
+        if (compactToggle) compactToggle.checked = enabled;
+        try { localStorage.setItem(storageKeys.compact, enabled ? '1' : '0'); } catch (e) {}
+      }
+
+      function applyCalm(enabled) {
+        body.classList.toggle('mode-calm', enabled);
+        if (calmToggle) calmToggle.checked = enabled;
+        try { localStorage.setItem(storageKeys.calm, enabled ? '1' : '0'); } catch (e) {}
+      }
+
+      function applyReadable(enabled) {
+        body.classList.toggle('font-readable', enabled);
+        if (readableToggle) readableToggle.checked = enabled;
+        try { localStorage.setItem(storageKeys.readable, enabled ? '1' : '0'); } catch (e) {}
+      }
+
+      function applyNoShadows(enabled) {
+        body.classList.toggle('no-shadows', enabled);
+        if (shadowToggle) shadowToggle.checked = enabled;
+        try { localStorage.setItem(storageKeys.noShadows, enabled ? '1' : '0'); } catch (e) {}
+      }
+
+      // Load saved settings
+      try {
+        const savedTheme = localStorage.getItem(storageKeys.theme);
+        applyTheme(savedTheme || 'modern');
+        applyCompact(localStorage.getItem(storageKeys.compact) === '1');
+        applyCalm(localStorage.getItem(storageKeys.calm) === '1');
+        applyReadable(localStorage.getItem(storageKeys.readable) === '1');
+        applyNoShadows(localStorage.getItem(storageKeys.noShadows) === '1');
+      } catch (e) {
+        applyTheme('modern');
+      }
+
+      themeSelect && themeSelect.addEventListener('change', (ev) => applyTheme(ev.target.value));
+      compactToggle && compactToggle.addEventListener('change', (ev) => applyCompact(ev.target.checked));
+      calmToggle && calmToggle.addEventListener('change', (ev) => applyCalm(ev.target.checked));
+      readableToggle && readableToggle.addEventListener('change', (ev) => applyReadable(ev.target.checked));
+      shadowToggle && shadowToggle.addEventListener('change', (ev) => applyNoShadows(ev.target.checked));
+
+      // Custom quick actions injected into quick launch grid
+      const CUSTOM_PREFIX = 'custom-quick-';
+      function loadCustomQuick() {
+        try { return JSON.parse(localStorage.getItem(storageKeys.customQuick)) || []; } catch (e) { return []; }
+      }
+      function saveCustomQuick(list) {
+        localStorage.setItem(storageKeys.customQuick, JSON.stringify(list));
+      }
+      function removeCustom(id) {
+        const list = loadCustomQuick().filter((it) => it.id !== id);
+        saveCustomQuick(list);
+        const el = qGrid?.querySelector(`[data-id="${id}"]`);
+        if (el) el.remove();
+      }
+      function renderCustomQuick() {
+        const list = loadCustomQuick();
+        list.forEach(({ id, label, url, icon: iconChar, color }) => {
+          if (!qGrid || qGrid.querySelector(`[data-id="${id}"]`)) return;
+          const a = document.createElement('a');
+          a.role = 'listitem';
+          a.className = 'quick-launch-item';
+          a.dataset.id = id;
+          a.dataset.href = url;
+          a.href = url || '#';
+          a.tabIndex = 0;
+          a.draggable = true;
+          const icon = iconChar || '⚡';
+          const colorStyle = color ? `style="border-color:${color};box-shadow:0 8px 18px ${color}1a"` : '';
+          a.setAttribute('data-color', color || '');
+          a.innerHTML = `<button class="pin-btn" aria-pressed="false" title="Pin">📌</button><span class="icon">${icon}</span><span class="label">${label}</span><button class="remove-quick" title="Remove" aria-label="Remove custom action">✕</button>`;
+          if (colorStyle) a.setAttribute('style', colorStyle);
+          if (window.lhQuickLaunch?.attach) {
+            window.lhQuickLaunch.attach(a);
+            window.lhQuickLaunch.applyPinned?.();
+          }
+          const removeBtn = a.querySelector('.remove-quick');
+          removeBtn?.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            removeCustom(id);
+            window.lhQuickLaunch?.saveOrder?.();
+          });
+          qGrid?.appendChild(a);
+          window.lhQuickLaunch?.saveOrder?.();
+        });
+      }
+      renderCustomQuick();
+
+      customAdd && customAdd.addEventListener('click', () => {
+        const label = (customLabel?.value || '').trim();
+        const url = (customUrl?.value || '').trim();
+        if (!label || !url) { alert('Enter a label and a URL/path.'); return; }
+        const list = loadCustomQuick();
+        const id = `${CUSTOM_PREFIX}${Date.now()}`;
+        const icon = (customIcon?.value || '').trim().slice(0, 3);
+        const color = customColor?.value || '';
+        list.push({ id, label, url, icon, color });
+        saveCustomQuick(list);
+        customLabel.value = '';
+        customUrl.value = '';
+        if (customIcon) customIcon.value = '';
+        renderCustomQuick();
+      });
+
+      // Simple onboarding highlight (one-time)
+      const ONBOARDING_ID = 'onboarding-overlay';
+      if (!localStorage.getItem(storageKeys.onboarding)) {
+        const overlay = document.createElement('div');
+        overlay.id = ONBOARDING_ID;
+        overlay.innerHTML = `
+          <div class="onboarding-dialog">
+            <h3>New controls</h3>
+            <ul>
+              <li>Use Theme/Compact/Calm toggles for quick readability tweaks.</li>
+              <li>Add your own quick actions in the Quick actions panel.</li>
+              <li>Try High contrast for maximum legibility.</li>
+            </ul>
+            <button type="button" id="onboarding-dismiss">Got it</button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        const dismiss = overlay.querySelector('#onboarding-dismiss');
+        dismiss?.addEventListener('click', () => {
+          overlay.remove();
+          localStorage.setItem(storageKeys.onboarding, '1');
+        });
+      }
+    });
+  </script>
+
 </body>
 </html>

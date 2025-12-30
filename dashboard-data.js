@@ -9,6 +9,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Keep empty by Friday",
     root: "Inbox",
     icon: "inbox",
+    keywords: ["downloads", "filing", "zero inbox"],
+    snippet: "Anything unfiled should land here first. Sweep it weekly so everything else stays tidy.",
   },
   {
     title: "Work",
@@ -22,6 +24,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Contracts, interviews, learning",
     root: "Work",
     icon: "briefcase",
+    keywords: ["resume", "career", "certifications", "job search"],
+    snippet: "Keep resumes, contracts, visa paperwork and upskilling trackers here.",
   },
   {
     title: "Family",
@@ -34,6 +38,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Health & schooling",
     root: "Family",
     icon: "family",
+    keywords: ["medical", "school", "therapy", "support plans"],
+    snippet: "Centralize paediatricians, NDIS paperwork, funding letters and teacher comms.",
   },
   {
     title: "Finance",
@@ -47,6 +53,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Policies, receipts, statements",
     root: "Finance",
     icon: "finance",
+    keywords: ["bank", "insurance", "tax", "invoices", "budget"],
+    snippet: "Statements, insurance renewals and reimbursement receipts all live here.",
   },
   {
     title: "Housing",
@@ -56,6 +64,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Applications & inspections",
     root: "Housing",
     icon: "home",
+    keywords: ["lease", "rental", "moving", "property"],
+    snippet: "Track applications, references and inspection reports.",
   },
   {
     title: "Personal",
@@ -69,6 +79,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "IDs, wellbeing, travel",
     root: "Personal",
     icon: "personal",
+    keywords: ["passport", "planning", "health", "fitness"],
+    snippet: "IDs, travel plans and wellbeing trackers, including Welltory exports.",
   },
   {
     title: "Projects",
@@ -81,6 +93,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Active builds & tooling",
     root: "Projects",
     icon: "projects",
+    keywords: ["code", "development", "tools", "SDKs"],
+    snippet: "Active code, experiments and their supporting toolchains.",
   },
   {
     title: "Hobbies",
@@ -94,6 +108,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Games & campaigns",
     root: "Hobbies",
     icon: "hobbies",
+    keywords: ["games", "tabletop", "mods", "joy"],
+    snippet: "Anything for fun: campaigns, launcher configs, modding utilities.",
   },
   {
     title: "Media",
@@ -106,6 +122,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Photos & screen captures",
     root: "Media",
     icon: "media",
+    keywords: ["photos", "screenshots", "scans"],
+    snippet: "Media library of captures, scans and snapshots.",
   },
   {
     title: "Templates & Resources",
@@ -118,6 +136,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Reusable content",
     root: "Templates",
     icon: "templates",
+    keywords: ["templates", "reference", "boilerplate"],
+    snippet: "Drop reusable docs and evergreen resources here.",
   },
   {
     title: "Archive",
@@ -127,6 +147,8 @@ window.LIFEHUB_DATA.cards = [
     focus: "Historical snapshots",
     root: "Archive",
     icon: "archive",
+    keywords: ["history", "archive", "records"],
+    snippet: "Closed-out work sorted by year so active folders stay lean.",
   },
 ];
 
@@ -137,3 +159,193 @@ window.LIFEHUB_DATA.tasks = [
   { id: "projects", label: "Review active Projects for blockers", cadence: "Weekly" },
   { id: "archive", label: "Move closed work to Archive/YYYY", cadence: "Quarterly" },
 ];
+
+window.LIFEHUB_DATA.playables = [
+  {
+    id: "fun-text-2025-v2",
+    name: "Fun Text Based Game 2025 (v2)",
+    type: "Python text adventure",
+    description: "Latest sandbox build with journal, crafting, and Wilds expansions.",
+    entry: "Projects/Software/Fun Text Based Game 2025 - Version 2.py",
+    command: "cd ~/LifeHub && python3 'Projects/Software/Fun Text Based Game 2025 - Version 2.py'",
+    notes: "Works best in Terminal. Use 'help' once started.",
+  },
+  {
+    id: "fun-text-2025",
+    name: "Fun Text Based Game 2025",
+    type: "Python text adventure",
+    description: "Original Whispering Wilds narrative loop with ASCII map support.",
+    entry: "Projects/Software/Fun Text Based Game 2025.py",
+    command: "cd ~/LifeHub && python3 'Projects/Software/Fun Text Based Game 2025.py'",
+    notes: "Interactive CLI adventure. Requires Python 3.10+.",
+  },
+  {
+    id: "text-prototype-1234",
+    name: "1234 Prototype",
+    type: "Python prototype",
+    description: "Experimental mechanics sandbox saved as 1234newfileqqqwertuhvgjkk.py.",
+    entry: "Projects/Software/1234newfileqqqwertuhvgjkk (1).py",
+    command: "cd ~/LifeHub && python3 \"Projects/Software/1234newfileqqqwertuhvgjkk (1).py\"",
+    notes: "Text console only. Expect debug output.",
+  },
+  {
+    id: "text-prototype-alt",
+    name: "newfileqqqwertuhvgjkk.py",
+    type: "Python prototype",
+    description: "Alternate branch for combat/io experimentation.",
+    entry: "Projects/Software/newfileqqqwertuhvgjkk.py",
+    command: "cd ~/LifeHub && python3 'Projects/Software/newfileqqqwertuhvgjkk.py'",
+    notes: "Run inside a Terminal window; responds to typed commands.",
+  },
+  {
+    id: "text-prototype-qqqq",
+    name: "qqqqqqn55545ewfile.py",
+    type: "Python prototype",
+    description: "Branch focused on RNG and narrative pacing tweaks.",
+    entry: "Projects/Software/qqqqqqn55545ewfile.py",
+    command: "cd ~/LifeHub && python3 'Projects/Software/qqqqqqn55545ewfile.py'",
+    notes: "Behaves like a text adventure; check help/commands.",
+  },
+  {
+    id: "whirringwilderness",
+    name: "WhirringWilderness",
+    type: "React/Vite prototype",
+    description: "Front-end build of the Whispering Wilds UI concepts.",
+    entry: "Projects/Software/WhirringWilderness",
+    command: "cd ~/LifeHub/Projects/Software/WhirringWilderness && npm install && npm run dev",
+    notes: "Launch dev server (http://localhost:5173). Requires Node 18+.",
+    folderLink: "Projects/Software/WhirringWilderness",
+  },
+  {
+    id: "unity-project",
+    name: "My Project (Unity)",
+    type: "Unity 3D project",
+    description: "Unity project folder ready for WebGL/Desktop builds.",
+    entry: "Projects/Software/My project",
+    command: "open -a Unity '/Users/joshualukeparris/LifeHub/Projects/Software/My project'",
+    notes: "Open in Unity Hub → Build & Run for standalone/WebGL.",
+    folderLink: "Projects/Software/My project",
+  },
+];
+
+window.LIFEHUB_DATA.spotlightResources = [
+  {
+    id: "weekly-planning",
+    title: "Weekly Planning Template",
+    description: "Drop your top three priorities, blockers, and support tasks.",
+    path: "Templates/index.html",
+    tags: ["planning", "templates"],
+  },
+  {
+    id: "moving-checklist",
+    title: "Moving Checklist",
+    description: "Step-by-step list for utilities, mail redirection, and packing stages.",
+    path: "Housing/index.html",
+    tags: ["housing", "reference"],
+  },
+  {
+    id: "therapy-log",
+    title: "Therapy Session Log",
+    description: "Structured journaling doc for therapy notes and follow-ups.",
+    path: "Family/index.html",
+    tags: ["family", "health"],
+  },
+];
+
+window.LIFEHUB_DATA.automations = [
+  {
+    id: "sweep-downloads",
+    label: "Sweep Downloads into Inbox",
+    description: "Moves everything from ~/Downloads into LifeHub/Inbox, skipping dmg/pkg installers.",
+    command: "python3 LifeHub/scripts/sweep_downloads.py",
+    durationSeconds: 25,
+  },
+  {
+    id: "update-stats",
+    label: "Refresh Dashboard Stats",
+    description: "Rebuilds dashboard-stats.json + wellbeing summary.",
+    command: "python3 LifeHub/scripts/update_dashboard_stats.py && python3 LifeHub/scripts/update_welltory_summary.py",
+    durationSeconds: 45,
+  },
+  {
+    id: "archive-quarter",
+    label: "Refresh recent files",
+    description: "Scans LifeHub areas and rebuilds recent-files.json for the dashboard widget.",
+    command: "python3 LifeHub/scripts/generate_recent_files.py",
+    durationSeconds: 35,
+  },
+];
+
+window.LIFEHUB_DATA.triageColumns = [
+  { id: "inbox", label: "Inbox", description: "Needs sorting", icon: "INBOX" },
+  { id: "family", label: "Family", description: "Health, therapy, school", icon: "FAMILY" },
+  { id: "finance", label: "Finance", description: "Invoices, reimbursements", icon: "FINANCE" },
+  { id: "projects", label: "Projects", description: "Active builds", icon: "PROJECTS" },
+  { id: "archive", label: "Archive", description: "Ready to file away", icon: "ARCHIVE" },
+];
+
+window.LIFEHUB_DATA.triageSeeds = [
+  {
+    id: "seed-speechworks",
+    label: "Speechworks invoice.pdf",
+    hint: "Likely Finance/Invoicing",
+    href: "Inbox/2025-07-Unsorted/Speechworks invoice.pdf",
+  },
+  {
+    id: "seed-ot-report",
+    label: "OT-progress-notes.docx",
+    hint: "Route to Family/Health",
+    href: "Inbox/2025-07-Unsorted/OT-progress-notes.docx",
+  },
+  {
+    id: "seed-wilds",
+    label: "Wilds-narrative-outline.md",
+    hint: "Maybe Projects/Fun Text Game",
+    href: "Inbox/2025-07-Unsorted/Wilds-narrative-outline.md",
+  },
+];
+
+window.LIFEHUB_DATA.copilotExamples = [
+  "show funding letters expiring soon",
+  "where did I save the RACV renewal",
+  "copy downloads sweep command",
+  "open anything tagged travel",
+];
+
+window.LIFEHUB_DATA.backups = [
+  {
+    id: "lifehub-ssd",
+    label: "LifeHub SSD clone",
+    status: "danger",
+    lastBackup: "2025-12-16T10:20:00+11:00",
+    frequency: "Daily",
+    location: "Desk drawer NVMe (2TB)",
+    command: "rsync -ah --delete ~/LifeHub /Volumes/LifeHub-Clone",
+    notes: "rsync to NVMe clone",
+  },
+  {
+    id: "icloud-drive",
+    label: "iCloud Drive sync",
+    status: "danger",
+    lastBackup: "2025-12-18T07:45:00+11:00",
+    frequency: "Hourly",
+    location: "Joshua's iCloud account",
+    command: "open ~/Library/Mobile\ Documents/com~apple~CloudDocs/LifeHub",
+    notes: "iCloud sync confirmed in Finder",
+  },
+  {
+    id: "offsite",
+    label: "Offsite cold storage",
+    status: "danger",
+    lastBackup: "2025-10-01T18:00:00+10:00",
+    frequency: "Monthly",
+    location: "Bendigo safe deposit box",
+    command: "Verify Backblaze snapshot 2025-10-01",
+    notes: "Backblaze snapshot verified",
+  },
+];
+
+window.LIFEHUB_DATA.agenda = {
+  icsPath: "Resources/calendar.ics",
+  remindersPath: "agenda-reminders.json",
+};

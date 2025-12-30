@@ -1,10 +1,29 @@
 {
-  "inboxCount": 1,
-  "familyHealthCount": 277,
-  "financeCount": 36,
-  "projectsCount": 1207,
-  "housingCount": 28,
-  "mediaCount": 100,
-  "archiveCount": 4,
-  "templatesCount": 0
+  "inboxCount": 6,
+  "familyHealthCount": 288,
+  "financeCount": 43,
+  "projectsCount": 1261,
+  "housingCount": 32,
+  "mediaCount": 103,
+  "archiveCount": 10,
+  "templatesCount": 1,
+  "lifehubSizeBytes": 5368283639,
+  "downloadsBacklog": 12,
+  "actionItemCount": 18,
+  "inboxWeeklyChange": 0,
+  "inboxTrend": [
+    {
+      "weekLabel": "Dec 21",
+      "count": 6,
+      "added": 0,
+      "cleared": 0
+    },
+    {
+      "weekLabel": "Dec 30",
+      "count": 6,
+      "added": 0,
+      "cleared": 0
+    }
+  ],
+  "generatedAt": "2025-12-30T04:38:06.695735+00:00"
 }

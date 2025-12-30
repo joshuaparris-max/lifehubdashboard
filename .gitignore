@@ -10,6 +10,17 @@
 !dashboard-data.js
 !dashboard-stats.json
 !welltory-summary.json
+!directory.css
+!recent-files.json
+!agenda-reminders.json
+!downloads-feed.json
+!todo.md
+!Makefile
+!Downloads/index.html
+!Downloads/directory.css
+!Resources/calendar.ics
+!automation/
+!automation/**
 
 # Allow scripts folder
 !scripts/
