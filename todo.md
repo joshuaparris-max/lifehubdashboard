@@ -22,12 +22,12 @@
 - [x] Kiosk mode (`dashboard.js:2535`) could expose settings for rotation order, dwell time, and panel selection; consider adding auto zoom/fullscreen controls for wall displays.
 
 ## Text Games (Pyodide)
-- [ ] Add command history (Up/Down) and auto-focus on input after each response so typing flows without extra clicks.
-- [ ] Bind keyboard shortcuts (Cmd/Ctrl+K focus input, Cmd/Ctrl+L clear console, Cmd/Ctrl+S save slot, Cmd/Ctrl+R load slot).
-- [ ] Add inline “Map” / “Help” buttons and a collapsible ASCII map panel under the console.
-- [ ] Show active slot + last saved time near save controls; render errors/success as colored chips.
-- [ ] Add optional autosave toggle (save to selected slot every turn or every N commands).
-- [ ] Increase console max-height on desktop (e.g., 400px) while keeping internal scroll, and keep Send button in a “processing…” state while Pyodide runs.
+- [x] Add command history (Up/Down) and auto-focus on input after each response so typing flows without extra clicks.
+- [x] Bind keyboard shortcuts (Cmd/Ctrl+K focus input, Cmd/Ctrl+L clear console, Cmd/Ctrl+S save slot, Cmd/Ctrl+R load slot).
+- [x] Add inline “Map” / “Help” buttons and a collapsible ASCII map panel under the console.
+- [x] Show active slot + last saved time near save controls; render errors/success as colored chips.
+- [x] Add optional autosave toggle (save to selected slot every turn or every N commands).
+- [x] Increase console max-height on desktop (e.g., 400px) while keeping internal scroll, and keep Send button in a “processing…” state while Pyodide runs.
 - [ ] Harden persistence: validate save payloads, expose a “reset slots” button, and consider iCloud/disk-backed saves to survive storage clears.
 - [ ] Share a single Pyodide instance between both games and preload via `setup_pyodide.py` for faster startup/offline use.
 
@@ -53,3 +53,170 @@
 - [ ] Add a one-click “export kit” that zips a chosen folder, hashes it, and copies it to Archive + backup drive.
 - [ ] Build a LifeHub health dashboard (storage usage, file counts, automation cadence) with sparkline cards.
 - [ ] Support collaboration mode that exports selected folders as read-only static sites for sharing with family/coworkers.
+
+## Fun & Flavor
+- [ ] Daily text game world events with rotating buffs/affixes and an in-dashboard banner.
+- [ ] Micro-quests that map real chores to D&D prompts with streak bonuses.
+- [ ] Tavern Talk banter feed (JSON-driven) with rotating flavor lines and tips.
+- [ ] Dice roller + random tables (encounters/loot) with a tiny transcript log.
+- [ ] Achievement badges for dashboard actions (refreshes, zero Inbox, triage runs).
+- [ ] Hidden easter egg (e.g., Konami code) that swaps to “pixel mode” theme or plays an 8-bit sting.
+- [ ] Lore blurbs for areas/cards (Finance = guild treasury, etc.) shown in detail view.
+- [ ] Seasonal / playful theme skins (e.g., Synthwave, Retro Terminal, Studio Ghibli) with per-panel hover animations.
+- [ ] Subtle confetti or sparkle effect on milestones (Inbox zero, automation run, quest complete) with a toggle to disable.
+- [ ] Ambient sounds for key actions (save game, complete task, run automation) behind a “sound on/off” toggle.
+- [ ] Quick challenges/speed runs (e.g., file 5 inbox items against a timer) with personal bests.
+- [ ] Exportable “brag cards” (PNG) for achievements/stats with one-click copy/share.
+- [ ] Text-game unlocks that award cosmetic dashboard items (pills/gradients/icons) when certain in-game events occur.
+- [ ] Rotating NPC visitors (bard, quartermaster, archivist) offering daily quests, hints, or bonuses.
+- [ ] Weekly mystery thread/puzzle with hidden clues across panels; solving unlocks a cosmetic/shortcut.
+- [ ] “Portal” dungeon runs that temporarily reskin the dashboard into a map; clear rooms by completing chores.
+- [ ] “Codex of Curios” collectibles unlocked by actions (refresh, triage, backups) with lore snippets per panel.
+- [ ] Random encounters (merchant/imp) that offer choices and small perks (e.g., kiosk speed, badge backgrounds).
+- [ ] Timeline “story mode” skin that renders entries as journal snippets.
+- [ ] Dice-based daily modifiers (“+1 to filing speed” auto-enables focus mode) via a hidden roll button.
+- [ ] Adventure map under text games that fills tiles as you clear daily tasks.
+- [ ] Add NPC portraits (free/CC0 art) with per-theme framing and drop shadows; fallback to initials if offline.
+- [ ] Add accent illustrations/icons for panel headers (stored under `Resources/ui-icons/`) to reduce text density.
+- [ ] Hero background illustrations per theme for the top header (Modern/Classic/Contrast).
+- [ ] Sprinkle emoji/icon chips next to stats and checklist items for quick visual cues.
+- [ ] Badge gallery with colorful gradients/glyphs; surface 3 featured badges on the dashboard.
+- [ ] Pattern/gradient library applied to panels (alternating per column) for visual variety.
+- [ ] Subtle animated glow/halo on focus mode and kiosk controls for a more “alive” feel.
+- [ ] Gradient token system per area (Finance, Projects, Inbox) applied to pills/cards/quick links for grouping.
+- [ ] Animated stat meters (pulsing/striped/liquid fills) with micro-icons on the bar ends.
+- [ ] Glassy overlays with subtle noise/light borders for banners (NPC, quests).
+- [ ] Sticker packs: allow pinning stickers/emotes on panels; show a sticker strip per panel.
+- [ ] Dynamic moving backgrounds (radial gradients/low-poly) behind columns, with Calm mode dimmer.
+- [ ] Illustrated dividers between sections (line art/runes/waves) to break text density.
+- [ ] NPC avatar rings with rotating accent halo and status dot; theme-aware colors.
+- [ ] Inline sparklines beside stats/checklist counts using accent colors.
+- [ ] Celebratory corner toasts (icon + color burst) on quest completion or Inbox zero.
+- [ ] Hover-reveal icons/hints on panel headers with brief fade/slide animations.
+- [ ] Add sticker packs (pin emotes on panels + per-panel sticker strip).
+- [ ] Hover-reveal hints/icons on panel headers with small fade/slide animation.
+- [ ] Add inline sparklines next to stats/checklist counts.
+- [ ] Celebratory toasts for quests, backups fresh, downloads cleared (icon + color burst).
+- [ ] Badge gallery with 3 featured badges; unlocks via dashboard actions.
+- [ ] Loot drops from NPC quests that unlock cosmetic chips you can apply to panels.
+- [ ] Background confetti trail when switching themes/modes.
+- [ ] XP/leveling system that awards XP on dashboard interactions; visible level badge.
+- [ ] Character creation flow tied to Skill checks & saves (STR/DEX/CON/etc).
+- [ ] Race/class selector with dialogue box during character creation.
+- [ ] Map skill stats to dashboard actions (e.g., STR for backups, INT for automation).
+- [ ] Per-action XP values + combo multipliers for streaks (Inbox runs, backups, automations).
+- [ ] Level-up perks that unlock cosmetic themes, stickers, or badge slots.
+- [ ] Skill checks on dashboard actions (e.g., CHA check to "persuade" Copilot, STR check to archive).
+- [ ] Quest log panel that tracks XP rewards and progress bars.
+- [ ] Talent tree / feat picker (automation efficiency, search bonuses, kiosk perks).
+- [ ] Alignment/faction system that shifts with actions (Order/Chaos, Maker/Archivist) and tints UI.
+- [ ] Party system: assign NPC companions to panels for small buffs.
+- [ ] Rest/camp button that regenerates "energy" and triggers ambient music.
+- [ ] Loot table for dashboard actions (random cosmetic drops, sticker packs, badge fragments).
+- [ ] Boss/mini-boss events (e.g., "Inbox Dragon") with progress bar and XP reward on completion.
+- [ ] Seasonal events that grant double XP or unique cosmetics for a week.
+- [ ] Character sheet panel showing stats, level, perks, faction, and equipped cosmetics.
+- [ ] Add full 5e ability/skill proficiencies (STR/DEX/CON/INT/WIS/CHA) with bonuses/expertise.
+- [ ] Add conditions/status effects (blessed, exhausted, poisoned) that buff/nerf dashboard behaviors.
+- [ ] Add inspiration/Bardic Inspiration dice pool to spend on checks.
+- [ ] Short/long rest flows that reset abilities/buffs (kiosk boosts, automation surges).
+- [ ] Spell slot/charge model for powerful actions (bulk triage, automation bursts) with per-day limits.
+- [ ] Event-driven saving throws (backup failed → CON save, inbox overflow → WIS save, etc.).
+- [ ] Advantage/disadvantage mechanic for risky actions (roll 2d20 best/worst).
+- [ ] Background/traits/ideals/bonds/flaws that unlock perks or flavor hooks.
+- [ ] Equipment/attunement system for artifacts that grant passive bonuses; attunement cap.
+- [ ] Party/help actions from NPCs; simple initiative/turn order for encounters.
+- [ ] Downtime/crafting activities that tick over time (craft cosmetics, train skills).
+- [ ] Encounter tracker for recurring events (Inbox dragon, Downloads goblins).
+- [ ] Damage types/resistances mapped to dashboard events/alerts (fire/cold/psychic, etc.).
+- [ ] Forbidden Lands-style overworld map with hex travel and random events.
+- [ ] Build/upgrade a stronghold in a dashboard section; spend resources to add rooms/bonuses.
+- [ ] Resource economy (wood/stone/ore/food) earned from actions or hunts; spend to build.
+- [ ] Hunting/foraging mini-loop to gather food for stronghold workers.
+- [ ] Age-of-Empires-inspired conversion: turn XP/quests into resources for construction.
+- [ ] Stronghold upkeep/raids: periodic events that require resources or trigger encounters.
+- [ ] Map nodes tied to dashboard panels (e.g., Resurface = ruins, Inbox = village) with travel time.
+- [ ] Crafting bench in stronghold to create cosmetics/stickers/badges from resources.
+
+## Subtasks (for implementation)
+- Daily world events: event JSON table, banner UI, daily random buff/affix hook into text games.
+- Micro-quests: quest JSON, quest panel UI, XP/sticker rewards, cadence reset logic.
+- Tavern Talk: JSON feed, rotator UI, timed updates, hide toggle.
+- Dice roller/tables: roller UI with history, load tables JSON, adv/disadv support.
+- Achievement badges: badges JSON, unlock conditions, gallery + featured row, state display.
+- Easter egg/Konami: sequence listener, pixel mode/8-bit audio toggle, opt-out setting.
+- Lore blurbs: lore map in data, show in detail view, “more lore” toggle.
+- Themed skins: add theme vars for skins, selector options, gradients/backgrounds per theme.
+- Confetti toggle: setting to enable/disable confetti/toasts, respect Calm mode.
+- Ambient sounds: audio assets, play on key actions, on/off persisted.
+- Quick challenges: timer widget, tasks per run, personal best store, start/stop controls.
+- Brag cards: canvas/PNG generation of stats, copy/download button, template styling.
+- Text-game cosmetics: unlock table, grant on commands, UI to apply cosmetics.
+- NPC visitors: roster JSON, daily pick, portraits, quest text, reroll button.
+- Weekly mystery: clues JSON, progress tracker, reward cosmetic, weekly reset.
+- Portal dungeon runs: map overlay, chores → room clears, reward cosmetic/XP.
+- Codex of Curios: collectibles data, unlock conditions, gallery UI.
+- Random encounters: modal event, choice buttons, apply perk/debuff.
+- Timeline story mode: alternate renderer, toggle switch.
+- Daily modifiers: store roll, apply to actions, show badge chip.
+- Adventure map (text games): small map UI, fill tiles as tasks complete.
+- Accent icons: load from `Resources/ui-icons/`, map to panels, lazy-load SVGs.
+- Hero backgrounds: per-theme header artwork, responsive sizing.
+- Emoji/icon chips: extend stat map, chip styling, checklist prefix opt-out.
+- Badge gallery (3 featured): gallery panel, featured row, unlock state display.
+- Pattern/gradient library: extend panel gradients, column alternation, calm dim.
+- Animated stat meters: CSS animation, optional data-driven widths.
+- Glassy overlays: apply noise/blur to banners (NPC/quests).
+- Sticker packs: sticker palette UI, per-panel sticker strip, persist placements.
+- Moving backgrounds: subtle motion effect, disable in Calm mode.
+- Illustrated dividers: SVG/PNG separators between sections.
+- NPC avatar rings: rotating halo CSS, status dot, theme-aware.
+- Inline sparklines: tiny SVG sparkline next to stats/checklist counts.
+- Celebratory toasts: toast component triggers for quests/backups/downloads/Inboxes.
+- Hover hints on headers: tooltip/hint with fade/slide on hover/focus.
+- XP/leveling: XP store, increment on interactions, level calc, level badge UI.
+- Character creation: modal with race/class, store selection, tie to skills panel.
+- Skill→action mapping: mapping table, adjust checks/outcomes by stat.
+- XP multipliers: per-action config, streak tracking, combo bonus.
+- Level-up perks: perk list, unlock UI, apply cosmetic slots/themes.
+- Skill checks: helper roll vs DC, adv/disadv support, UI feedback.
+- Quest log: list quests with XP, progress bars, claim rewards.
+- Talent tree/feats: tree data, UI, apply passive bonuses.
+- Alignment/faction: track via actions, tint UI, buffs per alignment.
+- Party buffs: assign NPC companions to panels, buffs, slot UI.
+- Rest/camp: buttons, reset certain resources, optional ambient sound.
+- Loot table: define drops, roll on completion, inventory for cosmetics.
+- Boss events: event data, progress bar, reward, trigger conditions.
+- Seasonal XP events: multiplier table, date toggle, banner.
+- Character sheet: stats, level, perks, faction, cosmetics.
+- Abilities/skills: data model STR/DEX/CON/INT/WIS/CHA, prof bonus, expertise, checks roller.
+- Conditions: status list, apply/remove, effect hooks.
+- Inspiration/Bardic: pool UI, spend on checks, recharge rules.
+- Rest flows: short/long rest buttons, reset resources, timers.
+- Spell slots/charges: per-day charges for powerful actions; UI display.
+- Saving throws: trigger on events (backup fail, inbox overflow), roll + outcomes.
+- Advantage/disadvantage: roller support, UI indicator.
+- Backgrounds/traits: select in creation, apply perks/flags.
+- Equipment/attunement: inventory, attunement cap, passive bonuses.
+- Party/help/initiative: simple turn order list, help action grants advantage.
+- Downtime/crafting: jobs with timers, progress UI, rewards.
+- Encounter tracker: list events, HP/progress bars, log outcomes.
+- Damage types/resistances: map alert types to damage, resistances reduce impact.
+- Hex map: SVG/Canvas map, nodes, travel time, random events.
+- Stronghold building: building data, resource costs, UI to place/upgrade rooms, buffs.
+- Resource economy: track wood/stone/ore/food; earn via actions/hunts; spend to build.
+- Hunting/foraging: mini-task to gather food; roll/resolution; add to resources.
+- XP→resource conversion: exchange XP/quests for materials.
+- Stronghold upkeep/raids: periodic events; deduct resources or trigger encounter.
+- Map nodes to panels: link sections to map nodes; optional travel gating.
+- Crafting bench: recipes for cosmetics/stickers/badges using resources; progress UI.
+
+# New D&D additions
+- [ ] Track consumables/loadout panel (potions/scrolls/rests tied to chores).
+- [ ] Rest system buttons (short/long) to refresh pools and reset encounter bars/log).
+- [ ] Condition/boon chips (Blessed/Hasted/Exhaustion) that auto-add bonuses/penalties to checks.
+- [ ] Quest hooks linked to real tasks (Inbox/Downloads/Backups) with XP rewards and flavor text.
+- [ ] Auto-import character sheet JSON/URL to prefill abilities, proficiency, skills.
+- [ ] Combat mini-loop: turn order roller + HP tracker for a few foes (Inbox dragon).
+- [ ] NPC quests grant XP + item rewards with claim button on NPC panel.
+- [ ] Inventory panel for character (weapons/armor/items) with attunement toggles and rarity badges.

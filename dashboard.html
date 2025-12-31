@@ -27,6 +27,11 @@
       <li><a href="#downloads-triage-panel">Downloads triage</a></li>
       <li><a href="#resurface-panel">Resurface</a></li>
       <li><a href="#backup-panel">Backup</a></li>
+      <li><a href="#achievement-panel">Achievements</a></li>
+      <li><a href="#quest-panel">Quest</a></li>
+      <li><a href="#tavern-panel">Tavern</a></li>
+      <li><a href="#dnd-tools-panel">5e tools</a></li>
+      <li><a href="#mini-adventure-panel">Mini adventure</a></li>
       <li><a href="#text-game-panel">Text game</a></li>
       <li><a href="#text-game-v2-panel">Text game v2</a></li>
       <li><a href="#scratchpad-panel">Scratchpad</a></li>
@@ -50,17 +55,29 @@
       <button class="pill focus-toggle kiosk-toggle" type="button" id="kiosk-pause" aria-pressed="false">
         Pause rotation
       </button>
+      <div class="xp-badge" id="xp-badge" aria-live="polite">
+        <div class="xp-label">
+          <span id="xp-level">Lv 1</span>
+          <small id="xp-meta">0 / 100 XP</small>
+        </div>
+        <div class="xp-track" aria-hidden="true"><span id="xp-progress"></span></div>
+      </div>
     </div>
   </header>
   <div class="control-bar" aria-label="Display and accessibility controls">
-    <label>
-      Theme
-      <select id="theme-select">
-        <option value="modern">Modern</option>
-        <option value="classic">Classic</option>
-        <option value="contrast">High contrast</option>
-      </select>
-    </label>
+      <label>
+        Theme
+        <select id="theme-select">
+          <option value="modern">Modern</option>
+          <option value="classic">Classic</option>
+          <option value="contrast">High contrast</option>
+          <option value="irish">Irish</option>
+          <option value="aussie">Aussie</option>
+          <option value="halloween">Halloween</option>
+          <option value="christmas">Christmas</option>
+          <option value="easter">Easter</option>
+        </select>
+      </label>
     <label class="toggle-chip">
       <input type="checkbox" id="compact-toggle" />
       <span>Compact spacing</span>
@@ -85,6 +102,62 @@
       </label>
       <button type="button" id="status-report-export" class="ghost" title="Export a markdown summary">Export status report</button>
     </div>
+    <label class="toggle-chip">
+      <span>Mode</span>
+      <select id="mode-select" aria-label="Dashboard mode">
+        <option value="mixed">Mixed</option>
+        <option value="fun">Fun</option>
+        <option value="work">Work</option>
+        <option value="parenting">Parenting</option>
+      </select>
+    </label>
+  </div>
+  <div class="settings-modal" id="settings-modal" aria-hidden="true" role="dialog" aria-labelledby="settings-title">
+    <div class="settings-modal-backdrop" id="settings-backdrop"></div>
+    <div class="settings-sheet">
+      <header class="settings-sheet-header">
+        <div>
+          <p class="settings-kicker">Settings</p>
+          <h2 id="settings-title">Dashboard controls</h2>
+          <p class="task-meta">Tweak display, refresh cadence, and flavor modes.</p>
+        </div>
+        <button type="button" id="settings-close" class="ghost">Close</button>
+      </header>
+      <div class="settings-grid">
+        <section>
+          <h3>Display</h3>
+          <label class="settings-row">
+            <span>Theme</span>
+            <select id="settings-theme">
+              <option value="modern">Modern</option>
+              <option value="classic">Classic</option>
+              <option value="contrast">High contrast</option>
+            </select>
+          </label>
+          <label class="settings-row"><span>Compact spacing</span><input type="checkbox" id="settings-compact" /></label>
+          <label class="settings-row"><span>Calm mode</span><input type="checkbox" id="settings-calm" /></label>
+          <label class="settings-row"><span>Readable font</span><input type="checkbox" id="settings-readable" /></label>
+          <label class="settings-row"><span>Remove shadows</span><input type="checkbox" id="settings-shadows" /></label>
+          <label class="settings-row"><span>Pixel mode</span><input type="checkbox" id="settings-pixel" /></label>
+        </section>
+        <section>
+          <h3>Refresh cadence</h3>
+          <label class="settings-row"><span>Enable auto-refresh</span><input type="checkbox" id="settings-autorefresh-enabled" /></label>
+          <label class="settings-row">
+            <span>Interval (minutes)</span>
+            <input type="number" id="settings-autorefresh-minutes" min="1" max="60" step="1" />
+          </label>
+        </section>
+        <section>
+          <h3>Data & export</h3>
+          <p class="task-meta">Use the buttons above the dashboard to export/import all settings. Visibility controls still live in the separate Settings page.</p>
+        </section>
+      </div>
+      <div class="settings-actions">
+        <button type="button" id="settings-apply" class="primary">Save & apply</button>
+        <button type="button" id="settings-cancel" class="ghost">Cancel</button>
+      </div>
+    </div>
   </div>
   <details class="kiosk-settings" id="kiosk-settings">
     <summary>Customize kiosk rotation</summary>
@@ -106,6 +179,31 @@
     </div>
   </details>
   <main id="main-content">
+  <section class="panel npc-panel" id="npc-panel">
+    <div class="npc-header">
+      <div class="npc-avatar" id="npc-avatar" aria-hidden="true">
+        <img id="npc-avatar-img" alt="" />
+      </div>
+      <div>
+        <p class="npc-kicker">Visitor of the Day</p>
+        <h2 id="npc-name">---</h2>
+        <p class="npc-role" id="npc-role"></p>
+      </div>
+      <button type="button" class="ghost" id="npc-reroll" title="Meet another visitor">New visitor</button>
+    </div>
+    <p class="npc-quest" id="npc-quest"></p>
+    <div class="npc-details">
+      <div>
+        <p class="npc-label">Tip</p>
+        <p id="npc-tip" class="npc-value"></p>
+      </div>
+      <div>
+        <p class="npc-label">Reward</p>
+        <p id="npc-reward" class="npc-value"></p>
+        <button type="button" id="npc-claim" class="ghost small">Claim reward</button>
+      </div>
+    </div>
+  </section>
   <section class="utility">
     <div class="panel search-panel">
       <label for="search">Search folders or tags</label>
@@ -140,11 +238,11 @@
       <div class="custom-quick-actions">
         <h3>Add your own quick action</h3>
         <div class="custom-quick-row">
-          <input id="custom-quick-label" type="text" placeholder="Label (e.g., Jira board)" />
-          <input id="custom-quick-url" type="url" placeholder="https:// or file path" />
-          <input id="custom-quick-icon" type="text" placeholder="Icon (emoji or letter)" maxlength="3" />
-          <input id="custom-quick-color" type="color" value="#2563eb" />
-          <button type="button" id="custom-quick-add">Add</button>
+          <input id="custom-quick-label" type="text" placeholder="Label (e.g., Jira board)" aria-label="Quick action label" />
+          <input id="custom-quick-url" type="url" placeholder="https:// or file path" aria-label="Link or file path" />
+          <input id="custom-quick-icon" type="text" placeholder="Icon (emoji or letter)" maxlength="3" aria-label="Icon" />
+          <input id="custom-quick-color" type="color" value="#2563eb" aria-label="Accent color" title="Accent color for the tile" />
+          <button type="button" id="custom-quick-add">Add quick action</button>
         </div>
         <p class="task-meta">Saved locally; added to the quick launch grid with drag + pin support.</p>
       </div>
@@ -153,6 +251,24 @@
         <button type="button" id="open-automation-modal" class="linkish">View automation commands</button>
       </div>
       <p class="action-feedback" id="action-feedback" role="status" aria-live="polite"></p>
+    </div>
+    <div class="panel quest-panel" id="quest-panel">
+      <div class="quest-header">
+        <div>
+          <p class="quest-kicker">Daily quest</p>
+          <h2 id="quest-title">Loading quest…</h2>
+          <p class="quest-summary" id="quest-summary">Summoning today’s task.</p>
+        </div>
+        <span class="status-chip" id="quest-reward">Reward incoming…</span>
+      </div>
+      <div class="quest-meta">
+        <span id="quest-goal">Ready.</span>
+        <span id="quest-streak" class="quest-streak">Streak: 0</span>
+      </div>
+      <div class="quest-actions">
+        <button type="button" id="quest-complete" class="primary">Complete quest</button>
+        <button type="button" id="quest-reroll" class="ghost">Reroll today</button>
+      </div>
     </div>
     <div class="panel stats">
       <dl class="stat-list">
@@ -287,6 +403,311 @@
     </div>
     <p class="task-meta">Copilot understands folder names, tags (health, finance, projects), or actions ("copy downloads command").</p>
     <ol id="copilot-results" class="copilot-results" aria-live="polite"></ol>
+  </section>
+
+  <section class="panel achievement-panel" id="achievement-panel">
+    <div class="achievement-header">
+      <div>
+        <p class="achievement-kicker">Achievements</p>
+        <h2>LifeHub badges</h2>
+        <p class="task-meta">Earn badges for refreshes, inbox victories, and triage runs.</p>
+      </div>
+      <span class="status-chip" id="achievement-summary">Tracking…</span>
+    </div>
+    <ol class="achievement-list" id="achievement-list" aria-live="polite">
+      <li>Loading badges…</li>
+    </ol>
+  </section>
+
+  <section class="panel tavern-panel" id="tavern-panel">
+    <div class="tavern-header">
+      <div>
+        <p class="tavern-kicker">Tavern talk</p>
+        <h2>Rotating banter</h2>
+        <p class="task-meta">Flavor lines and hints for your sweep.</p>
+      </div>
+      <div class="tavern-actions">
+        <button type="button" id="tavern-prev" class="ghost">Prev</button>
+        <button type="button" id="tavern-next">Next</button>
+      </div>
+    </div>
+    <blockquote class="tavern-line" id="tavern-line">Pulling up tavern tales…</blockquote>
+    <p class="task-meta" id="tavern-meta">Rotates every few seconds.</p>
+  </section>
+
+  <section class="panel dnd-tools-panel" id="dnd-tools-panel">
+    <div class="dnd-tools-header">
+      <div>
+        <p class="dnd-kicker">5e tools</p>
+        <h2>Skill checks & saves</h2>
+        <p class="task-meta">Roll d20s with ability mods and DC targets.</p>
+      </div>
+      <div class="dnd-abilities">
+        <label>STR <input type="number" id="dnd-str" value="+2" step="1" /></label>
+        <label>DEX <input type="number" id="dnd-dex" value="+2" step="1" /></label>
+        <label>CON <input type="number" id="dnd-con" value="+2" step="1" /></label>
+        <label>INT <input type="number" id="dnd-int" value="+0" step="1" /></label>
+        <label>WIS <input type="number" id="dnd-wis" value="+1" step="1" /></label>
+        <label>CHA <input type="number" id="dnd-cha" value="+0" step="1" /></label>
+        <label>Prof <input type="number" id="dnd-prof" value="+2" step="1" /></label>
+      </div>
+    </div>
+    <div class="dnd-roll-row">
+      <label>
+        Check
+        <select id="dnd-check-type">
+          <option value="STR">Strength</option>
+          <option value="DEX">Dexterity</option>
+          <option value="CON">Constitution</option>
+          <option value="INT">Intelligence</option>
+          <option value="WIS">Wisdom</option>
+          <option value="CHA">Charisma</option>
+        </select>
+      </label>
+      <label>
+        Skill (auto ability)
+        <select id="dnd-skill">
+          <option value="">-- none --</option>
+          <option value="acrobatics">Acrobatics (DEX)</option>
+          <option value="animal">Animal Handling (WIS)</option>
+          <option value="arcana">Arcana (INT)</option>
+          <option value="athletics">Athletics (STR)</option>
+          <option value="deception">Deception (CHA)</option>
+          <option value="history">History (INT)</option>
+          <option value="insight">Insight (WIS)</option>
+          <option value="intimidation">Intimidation (CHA)</option>
+          <option value="investigation">Investigation (INT)</option>
+          <option value="medicine">Medicine (WIS)</option>
+          <option value="nature">Nature (INT)</option>
+          <option value="perception">Perception (WIS)</option>
+          <option value="performance">Performance (CHA)</option>
+          <option value="persuasion">Persuasion (CHA)</option>
+          <option value="religion">Religion (INT)</option>
+          <option value="sleight">Sleight of Hand (DEX)</option>
+          <option value="stealth">Stealth (DEX)</option>
+          <option value="survival">Survival (WIS)</option>
+        </select>
+      </label>
+      <div class="dnd-skill-toggles">
+        <label class="toggle-chip">
+          <input type="checkbox" id="dnd-skill-prof" />
+          <span>Proficient</span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="dnd-skill-expert" />
+          <span>Expertise</span>
+        </label>
+      </div>
+      <label>
+        DC
+        <input type="number" id="dnd-dc" value="12" min="1" max="30" />
+      </label>
+      <button type="button" id="dnd-roll">Roll</button>
+      <button type="button" id="dnd-adv" class="ghost">Advantage</button>
+      <button type="button" id="dnd-dis" class="ghost">Disadvantage</button>
+      <div class="dnd-pools">
+        <label class="toggle-chip pool-chip">
+          <input type="checkbox" id="dnd-inspiration" />
+          <span>Use Inspiration</span>
+        </label>
+        <div class="pool-row">
+          <label>Pool<input type="number" id="dnd-insp-pool" min="0" value="0" /></label>
+          <button type="button" class="ghost" id="dnd-insp-add">+1</button>
+        </div>
+        <label class="toggle-chip pool-chip">
+          <input type="checkbox" id="dnd-bardic" />
+          <span>Use Bardic</span>
+        </label>
+        <div class="pool-row">
+          <label>Dice<input type="number" id="dnd-bardic-pool" min="0" value="0" /></label>
+          <select id="dnd-bardic-die">
+            <option value="6">d6</option>
+            <option value="8">d8</option>
+            <option value="10">d10</option>
+            <option value="12">d12</option>
+          </select>
+          <button type="button" class="ghost" id="dnd-bardic-add">+1</button>
+        </div>
+      </div>
+      <button type="button" id="dnd-clear" class="ghost">Clear log</button>
+    </div>
+    <ol class="dice-log" id="dnd-log" aria-live="polite">
+      <li>Ready for a check.</li>
+    </ol>
+    <div class="character-card" id="character-card">
+      <div>
+        <p class="dnd-kicker">Character</p>
+        <h3 id="character-name">Unassigned</h3>
+        <p class="task-meta" id="character-lineage">Race / Class</p>
+        <p class="task-meta" id="character-notes">Background: —</p>
+      </div>
+      <div class="character-meta">
+        <span class="pill" id="character-level">Lv 1</span>
+        <button type="button" class="ghost" id="character-edit">Edit</button>
+      </div>
+    </div>
+    <div class="inventory-panel" id="inventory-panel">
+      <div class="inventory-header">
+        <div>
+          <p class="dnd-kicker">Inventory</p>
+          <h3>Magic items & gear</h3>
+          <p class="task-meta">Attune up to three; add from NPC rewards or manually.</p>
+        </div>
+      </div>
+      <div class="inventory-add">
+        <input type="text" id="inv-name" placeholder="Item name (e.g., Moon-Touched Sword)" />
+        <select id="inv-type">
+          <option value="item">Item</option>
+          <option value="weapon">Weapon</option>
+          <option value="armor">Armor</option>
+        </select>
+        <select id="inv-rarity">
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="very-rare">Very rare</option>
+          <option value="legendary">Legendary</option>
+        </select>
+        <input type="text" id="inv-notes" placeholder="Notes (e.g., +1 to hit)" />
+        <button type="button" id="inv-add">Add item</button>
+      </div>
+      <div class="inventory-list" id="inventory-list">
+        <p class="task-meta">No items yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="settings-modal" id="character-modal" aria-hidden="true" role="dialog" aria-labelledby="character-title">
+    <div class="settings-modal-backdrop" id="character-backdrop"></div>
+    <div class="settings-sheet">
+      <header class="settings-sheet-header">
+        <div>
+          <p class="settings-kicker">Character</p>
+          <h2 id="character-title">Create your hero</h2>
+          <p class="task-meta">Name, race, class, and a note. Level is driven by your XP.</p>
+        </div>
+        <button type="button" id="character-close" class="ghost">Close</button>
+      </header>
+      <div class="settings-grid">
+        <label class="settings-row">
+          <span>Name</span>
+          <input type="text" id="char-name-input" placeholder="E.g., Aria" />
+        </label>
+        <label class="settings-row">
+          <span>Race</span>
+          <select id="char-race-input">
+            <option value="">Pick a lineage</option>
+            <option>Human</option>
+            <option>Elf</option>
+            <option>Dwarf</option>
+            <option>Halfling</option>
+            <option>Gnome</option>
+            <option>Half-elf</option>
+            <option>Half-orc</option>
+            <option>Tiefling</option>
+            <option>Dragonborn</option>
+            <option>Custom</option>
+          </select>
+        </label>
+        <label class="settings-row">
+          <span>Class</span>
+          <select id="char-class-input">
+            <option value="">Choose a class</option>
+            <option>Barbarian</option>
+            <option>Bard</option>
+            <option>Cleric</option>
+            <option>Druid</option>
+            <option>Fighter</option>
+            <option>Monk</option>
+            <option>Paladin</option>
+            <option>Ranger</option>
+            <option>Rogue</option>
+            <option>Sorcerer</option>
+            <option>Warlock</option>
+            <option>Wizard</option>
+            <option>Artificer</option>
+            <option>Custom</option>
+          </select>
+        </label>
+        <label class="settings-row">
+          <span>Background / notes</span>
+          <textarea id="char-notes-input" rows="2" placeholder="E.g., Archivist of the Inbox, hunts goblins in Downloads."></textarea>
+        </label>
+      </div>
+      <div class="settings-actions">
+        <button type="button" id="character-save" class="primary">Save character</button>
+        <button type="button" id="character-cancel" class="ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="panel mini-adventure-panel" id="mini-adventure-panel">
+    <div class="mini-header">
+      <div>
+        <p class="mini-kicker">Mini adventure</p>
+        <h2>Clocktower Heist</h2>
+        <p class="task-meta">A quick choice-based run that fits inside the dashboard.</p>
+      </div>
+      <div class="mini-actions">
+        <button type="button" id="mini-start">Start</button>
+        <button type="button" id="mini-reset" class="ghost">Reset</button>
+      </div>
+    </div>
+    <div class="mini-body">
+      <p id="mini-text">Press start to begin.</p>
+      <div class="mini-choices" id="mini-choices"></div>
+    </div>
+  </section>
+
+  <section class="panel dice-panel" id="dice-panel">
+    <div class="dice-header">
+      <div>
+        <p class="dice-kicker">Dice & tables</p>
+        <h2>Rolls, encounters, loot</h2>
+        <p class="task-meta">Tiny GM tools for decisions and fun.</p>
+      </div>
+      <div class="dice-actions" id="dice-buttons">
+        <button type="button" data-die="4" class="ghost">d4</button>
+        <button type="button" data-die="6" class="ghost">d6</button>
+        <button type="button" data-die="8" class="ghost">d8</button>
+        <button type="button" data-die="10" class="ghost">d10</button>
+        <button type="button" data-die="12" class="ghost">d12</button>
+        <button type="button" data-die="20" class="ghost">d20</button>
+      </div>
+    </div>
+    <div class="dice-table-actions">
+      <button type="button" id="dice-encounter">Roll encounter</button>
+      <button type="button" id="dice-loot" class="ghost">Roll loot</button>
+      <button type="button" id="dice-clear" class="ghost">Clear log</button>
+    </div>
+    <ol class="dice-log" id="dice-log" aria-live="polite">
+      <li>Awaiting your first roll.</li>
+    </ol>
+    <div class="encounter-tracker" id="encounter-tracker">
+      <h3>Encounter tracker</h3>
+      <div class="encounter-row" data-encounter="inbox">
+        <div>
+          <strong>Inbox dragon</strong>
+          <small class="task-meta">Clear inbox tasks to slay</small>
+        </div>
+        <div class="encounter-controls">
+          <div class="encounter-bar"><span></span></div>
+          <button type="button" data-encounter-dec="inbox" class="ghost">-1</button>
+          <button type="button" data-encounter-inc="inbox" class="ghost">+1</button>
+        </div>
+      </div>
+      <div class="encounter-row" data-encounter="downloads">
+        <div>
+          <strong>Downloads goblins</strong>
+          <small class="task-meta">Process downloads to push back</small>
+        </div>
+        <div class="encounter-controls">
+          <div class="encounter-bar"><span></span></div>
+          <button type="button" data-encounter-dec="downloads" class="ghost">-1</button>
+          <button type="button" data-encounter-inc="downloads" class="ghost">+1</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="panel automation-scheduler" id="automation-scheduler-panel">
@@ -606,10 +1027,28 @@
       <div>
         <h2>Backup Integrity</h2>
         <p>Know when each LifeHub replica last synced and how to verify it.</p>
+        <div class="backup-health-row">
+          <span id="backup-summary" class="status-chip">Loading backups…</span>
+          <span id="backup-next-action" class="backup-next-action">Pulling the latest backup info.</span>
+        </div>
       </div>
-      <button type="button" id="backup-refresh" class="ghost">Refresh</button>
+      <div class="backup-actions">
+        <button type="button" id="backup-refresh" class="ghost">Refresh</button>
+      </div>
     </div>
     <ul id="backup-list" class="backup-list" aria-live="polite"></ul>
+  </section>
+
+  <section class="panel text-game-event-panel" id="text-game-event-panel">
+    <div class="text-game-event-heading">
+      <div>
+        <p class="event-kicker">Today's realm event</p>
+        <h2 id="text-game-event-name">Loading…</h2>
+        <p class="event-summary" id="text-game-event-summary">Preparing the stage.</p>
+        <p class="event-meta" id="text-game-event-meta">Rotates daily.</p>
+      </div>
+      <span class="status-chip" id="text-game-event-effect">Fetching affix…</span>
+    </div>
   </section>
 
   <section class="panel text-game" id="text-game-panel">
@@ -626,6 +1065,11 @@
       <input id="text-game-input" type="text" placeholder="Type a command (e.g., look, move e, unlock, talk, 1)" autocomplete="off" disabled />
       <button type="submit" disabled>Send</button>
     </form>
+    <div class="text-game-quick-actions">
+      <button type="button" data-game-command="base" data-command="map">Map</button>
+      <button type="button" data-game-command="base" data-command="help">Help</button>
+      <button type="button" data-game-command="base" data-command="clear">Clear console</button>
+    </div>
     <div class="text-game-save-controls">
       <label for="text-game-slot">Save slot</label>
       <select id="text-game-slot">
@@ -635,8 +1079,13 @@
       </select>
       <button type="button" data-game-save="base">Save</button>
       <button type="button" data-game-load="base">Load</button>
+      <label class="autosave-toggle"><input type="checkbox" id="text-game-autosave" /> Autosave</label>
       <span class="text-game-save-status" id="text-game-save-status"></span>
     </div>
+    <details class="text-game-map" id="text-game-map-panel">
+      <summary>Map</summary>
+      <pre id="text-game-map-output">Use “Map” to fetch the current map.</pre>
+    </details>
   </section>
 
   <section class="panel text-game" id="text-game-v2-panel">
@@ -653,6 +1102,11 @@
       <input id="text-game-v2-input" type="text" placeholder="Type a command (e.g., look, move e, unlock, talk, 1)" autocomplete="off" disabled />
       <button type="submit" disabled>Send</button>
     </form>
+    <div class="text-game-quick-actions">
+      <button type="button" data-game-command="v2" data-command="map">Map</button>
+      <button type="button" data-game-command="v2" data-command="help">Help</button>
+      <button type="button" data-game-command="v2" data-command="clear">Clear console</button>
+    </div>
     <div class="text-game-save-controls">
       <label for="text-game-v2-slot">Save slot</label>
       <select id="text-game-v2-slot">
@@ -662,8 +1116,13 @@
       </select>
       <button type="button" data-game-save="v2">Save</button>
       <button type="button" data-game-load="v2">Load</button>
+      <label class="autosave-toggle"><input type="checkbox" id="text-game-v2-autosave" /> Autosave</label>
       <span class="text-game-save-status" id="text-game-v2-save-status"></span>
     </div>
+    <details class="text-game-map" id="text-game-v2-map-panel">
+      <summary>Map</summary>
+      <pre id="text-game-v2-map-output">Use “Map” to fetch the current map.</pre>
+    </details>
   </section>
 
   <section class="panel detail" id="detail-view" aria-live="polite">
@@ -713,6 +1172,13 @@
       <label class="visually-hidden" for="command-input">Search commands</label>
       <input id="command-input" type="search" placeholder="Type a command or shortcut…" autocomplete="off" />
       <ul id="command-results"></ul>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <div class="icon" id="toast-icon">🎉</div>
+    <div>
+      <div class="label" id="toast-label">Achievement unlocked</div>
+      <div class="meta" id="toast-meta">Inbox zero</div>
     </div>
   </div>
 
@@ -1227,6 +1693,7 @@
       const calmToggle = document.getElementById('calm-toggle');
       const readableToggle = document.getElementById('readable-font-toggle');
       const shadowToggle = document.getElementById('shadow-toggle');
+      const modeSelect = document.getElementById('mode-select');
       const customLabel = document.getElementById('custom-quick-label');
       const customUrl = document.getElementById('custom-quick-url');
       const customIcon = document.getElementById('custom-quick-icon');
@@ -1240,20 +1707,56 @@
         readable: 'lh_readable_font',
         noShadows: 'lh_no_shadows',
         customQuick: 'lh_custom_quick_actions',
-        onboarding: 'lh_onboarding_seen'
+        onboarding: 'lh_onboarding_seen',
+        mode: 'lh_mode_filter'
+      };
+      function fireConfetti() {
+        const colors = ['#5da8ff', '#22d3b6', '#f59e0b', '#c084fc', '#fb7185', '#0ea5e9'];
+        const count = 20;
+        for (let i = 0; i < count; i++) {
+          const piece = document.createElement('span');
+          piece.className = 'confetti-piece';
+          const angle = (Math.random() * 2 - 1) * 120; // horizontal drift
+          const distance = 60 + Math.random() * 60;
+          piece.style.setProperty('--confetti-x', `${angle}px`);
+          piece.style.setProperty('--confetti-y', `${distance}vh`);
+          piece.style.left = `${Math.random() * 100}%`;
+          piece.style.background = colors[i % colors.length];
+          piece.style.animationDelay = `${Math.random() * 0.2}s`;
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), 1400);
+        }
+      }
+      const MODE_GROUPS = {
+        fun: ['playables', 'text-game-panel', 'text-game-v2-panel', 'resource-spotlight', 'card-grid'],
+        work: [
+          'copilot-panel',
+          'automation-scheduler-panel',
+          'health-panel',
+          'timeline-panel',
+          'recent-files-panel',
+          'triage-panel',
+          'downloads-panel',
+          'downloads-triage-panel',
+          'resurface-panel',
+          'backup-panel'
+        ],
+        parenting: ['wellbeing-widget', 'triage-panel', 'backup-panel'],
+        mixed: []
       };
 
       function applyTheme(mode) {
-        const modern = mode === 'modern';
-        const classic = mode === 'classic';
-        const contrast = mode === 'contrast';
-        body.classList.toggle('theme-classic', classic);
-        body.classList.toggle('theme-contrast', contrast);
-        if (!classic && !contrast) {
-          body.classList.remove('theme-classic', 'theme-contrast');
+        const knownThemes = ['modern', 'classic', 'contrast', 'irish', 'aussie', 'halloween', 'christmas', 'easter'];
+        const fallback = knownThemes.includes(mode) ? mode : 'modern';
+        knownThemes.forEach((name) => {
+          if (name !== 'modern') body.classList.remove(`theme-${name}`);
+        });
+        if (fallback !== 'modern') {
+          body.classList.add(`theme-${fallback}`);
         }
-        if (themeSelect) themeSelect.value = contrast ? 'contrast' : classic ? 'classic' : 'modern';
-        try { localStorage.setItem(storageKeys.theme, themeSelect.value); } catch (e) {}
+        if (themeSelect) themeSelect.value = fallback;
+        fireConfetti();
+        try { localStorage.setItem(storageKeys.theme, fallback); } catch (e) {}
       }
 
       function applyCompact(enabled) {
@@ -1280,6 +1783,33 @@
         try { localStorage.setItem(storageKeys.noShadows, enabled ? '1' : '0'); } catch (e) {}
       }
 
+      function applyMode(mode) {
+        const requested = ['fun', 'work', 'parenting', 'mixed'].includes(mode) ? mode : 'mixed';
+        const allPanels = Array.from(document.querySelectorAll('.panel'));
+        const hideSet = new Set(MODE_GROUPS[requested] || []);
+        allPanels.forEach((panel) => {
+          const id = panel.id;
+          if (!id && hideSet.size > 0) {
+            panel.classList.add('mode-hidden');
+            return;
+          }
+          const tag = panel.dataset.modeTag;
+          const shouldHide =
+            hideSet.size > 0 && !hideSet.has(id) && !(tag && hideSet.has(tag));
+          panel.classList.toggle('mode-hidden', shouldHide);
+        });
+        document.querySelectorAll('.side-nav a').forEach((link) => {
+          const href = link.getAttribute('href') || '';
+          if (!href.startsWith('#')) return;
+          const target = document.querySelector(href);
+          if (!target) return;
+          link.classList.toggle('mode-hidden', hideSet.size > 0 && target.classList.contains('mode-hidden'));
+        });
+        if (modeSelect) modeSelect.value = requested;
+        fireConfetti();
+        try { localStorage.setItem(storageKeys.mode, requested); } catch (e) {}
+      }
+
       // Load saved settings
       try {
         const savedTheme = localStorage.getItem(storageKeys.theme);
@@ -1288,6 +1818,7 @@
         applyCalm(localStorage.getItem(storageKeys.calm) === '1');
         applyReadable(localStorage.getItem(storageKeys.readable) === '1');
         applyNoShadows(localStorage.getItem(storageKeys.noShadows) === '1');
+        applyMode(localStorage.getItem(storageKeys.mode) || 'mixed');
       } catch (e) {
         applyTheme('modern');
       }
@@ -1297,6 +1828,7 @@
       calmToggle && calmToggle.addEventListener('change', (ev) => applyCalm(ev.target.checked));
       readableToggle && readableToggle.addEventListener('change', (ev) => applyReadable(ev.target.checked));
       shadowToggle && shadowToggle.addEventListener('change', (ev) => applyNoShadows(ev.target.checked));
+      modeSelect && modeSelect.addEventListener('change', (ev) => applyMode(ev.target.value));
 
       // Custom quick actions injected into quick launch grid
       const CUSTOM_PREFIX = 'custom-quick-';
@@ -1386,6 +1918,10 @@
       }
     });
   </script>
-
+  <script>
+    // Label a few un-id'd panels for mode tagging
+    document.querySelectorAll('.panel.quick-actions').forEach((el) => el.setAttribute('data-mode-tag', 'fun'));
+    document.querySelectorAll('.panel.search-panel').forEach((el) => el.setAttribute('data-mode-tag', 'work'));
+  </script>
 </body>
 </html>

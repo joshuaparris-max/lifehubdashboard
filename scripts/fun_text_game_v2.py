@@ -1,9 +1,9 @@
 # ===========================
-# TEXT ADVENTURE V2 - DECK ROGUELIKE (Completely Different)
+# TEXT ADVENTURE V2 - STARSHIP HEIST (Deck Ops)
 # ===========================
-# A turn-based deck-building roguelike where you draft cards, build a deck,
-# and battle procedurally-generated enemies across 3 zones with increasing difficulty.
-# NO exploration, NO rooms, NO items—just pure strategic card play.
+# A turn-based deck-building run set aboard a drifting corporate cruiser.
+# Draft hacking/tech cards, breach three ship sectors, and beat security AIs.
+# No walking rooms: just tactical encounters and upgrades between fights.
 
 from __future__ import annotations
 from typing import Dict, List, Optional, Set
@@ -133,27 +133,27 @@ class Enemy:
 
 CARD_CATALOG = {
     # Common cards
-    "slash": Card("slash", "Slash", 1, "damage", 6, "common"),
-    "block": Card("block", "Block", 1, "block", 4, "common"),
-    "draw": Card("draw", "Analyze", 1, "draw", 2, "common"),
-    "heal": Card("heal", "Recover", 2, "heal", 4, "common"),
+    "zap": Card("zap", "Zap", 1, "damage", 6, "common"),
+    "shield": Card("shield", "Pulse Shield", 1, "block", 4, "common"),
+    "scan": Card("scan", "Packet Scan", 1, "draw", 2, "common"),
+    "patch": Card("patch", "Auto-Patch", 2, "heal", 4, "common"),
 
     # Rare cards
-    "power_slash": Card("power_slash", "Power Slash", 2, "damage", 12, "rare"),
-    "barrier": Card("barrier", "Barrier", 2, "block", 8, "rare"),
-    "rage": Card("rage", "Rage", 2, "double", 1, "rare"),  # Next attack deals 2x
+    "overclock": Card("overclock", "Overclock", 2, "double", 1, "rare"),  # buff next hit
+    "ion_blast": Card("ion_blast", "Ion Blast", 2, "damage", 12, "rare"),
+    "phase_wall": Card("phase_wall", "Phase Wall", 2, "block", 8, "rare"),
 
     # Epic cards
-    "annihilate": Card("annihilate", "Annihilate", 3, "damage", 20, "epic"),
-    "fortress": Card("fortress", "Fortress", 3, "block", 12, "epic"),
-    "second_wind": Card("second_wind", "Second Wind", 3, "heal", 8, "epic"),
+    "lance": Card("lance", "Plasma Lance", 3, "damage", 20, "epic"),
+    "nano_aegis": Card("nano_aegis", "Nano Aegis", 3, "block", 12, "epic"),
+    "reboot": Card("reboot", "Reboot", 3, "heal", 8, "epic"),
 }
 
 ENEMY_CATALOG = {
-    "goblin": Enemy("goblin", "Goblin", 15, ["attack", "attack"]),
-    "orc": Enemy("orc", "Orc", 25, ["attack", "defend", "attack"]),
-    "dragon": Enemy("dragon", "Dragon", 40, ["attack", "special", "attack"]),
-    "troll": Enemy("troll", "Troll", 30, ["defend", "attack", "attack"]),
+    "drone": Enemy("drone", "Sentinel Drone", 15, ["attack", "attack"]),
+    "android": Enemy("android", "Boarding Android", 25, ["attack", "defend", "attack"]),
+    "turret": Enemy("turret", "Plasma Turret", 30, ["defend", "attack", "attack"]),
+    "warden": Enemy("warden", "Core Warden AI", 40, ["attack", "special", "attack"]),
 }
 
 
@@ -176,6 +176,12 @@ class Game:
     def say(self, msg: str) -> None:
         print(msg)
 
+    def intro(self) -> None:
+        self.say("=== STARSHIP HEIST: DECK OPS ===")
+        self.say("You and a crew of two AIs board a drifting corporate cruiser.")
+        self.say("Draft hacking tools, breach 3 ship sectors, and outplay security AIs.")
+        self.say("Type 'start' to begin a new run.")
+
     def start_run(self) -> None:
         """Begin a new roguelike run."""
         self.player = Player()
@@ -187,15 +193,15 @@ class Game:
 
         # Start with 3 basic cards
         for _ in range(3):
-            self.player.deck.add_card(CARD_CATALOG["slash"])
-            self.player.deck.add_card(CARD_CATALOG["block"])
+            self.player.deck.add_card(CARD_CATALOG["zap"])
+            self.player.deck.add_card(CARD_CATALOG["shield"])
 
-        self.say("🎮 NEW RUN STARTED 🎮")
+        self.say("🚀 NEW HEIST RUN STARTED 🚀")
         self.say(f"Seed: {self.seed}")
         self.say(f"Starting deck: {self.player.deck.deck_size()} cards")
-        self.say(f"HP: {self.player.hp}/{self.player.max_hp}")
+        self.say(f"Suit integrity: {self.player.hp}/{self.player.max_hp}")
         self.say("")
-        self.say("Commands: battle, draft, deck, stats, quit")
+        self.say("Commands: start, battle, draft, deck, stats, quit")
 
     def draft_choice(self, idx: int) -> None:
         """Player picks from 3 random cards to add to deck."""
@@ -254,11 +260,11 @@ class Game:
 
         # Pick random enemy scaled to zone
         if self.player.zone == 1:
-            choices = ["goblin", "orc"]
+            choices = ["drone", "android"]
         elif self.player.zone == 2:
-            choices = ["orc", "troll"]
+            choices = ["android", "turret"]
         else:
-            choices = ["dragon", "troll"]
+            choices = ["warden", "turret"]
 
         enemy_id = self.rng.choice(choices)
         enemy_def = ENEMY_CATALOG[enemy_id]
@@ -266,7 +272,7 @@ class Game:
 
         self.current_battle = Battle(self.player, enemy)
         self.say(f"\n⚔️  BATTLE: {enemy.name} (HP: {enemy.hp})")
-        self.say(f"Your HP: {self.player.hp}/{self.player.max_hp}")
+        self.say(f"Suit integrity: {self.player.hp}/{self.player.max_hp}")
         self.say("")
         self.say("Commands: play [num], end (end turn), quit")
 
@@ -349,7 +355,7 @@ class Game:
             return True
 
         if cmd == "tips":
-            self.say("Tips: Draft block early to survive zone 1. Play high ATK first. Rest by ending fights quickly.")
+            self.say("Tips: Draft shields early; turrets hit hard. Overclock before big hits. Zone change after 3 wins.")
             return True
 
         if cmd == "start":
@@ -399,10 +405,10 @@ class Game:
             return True
 
         if cmd == "map":
-            self.say("🗺️  ZONES")
-            self.say(f"Zone 1 (Current): Goblin, Orc")
-            self.say(f"Zone 2: Orc, Troll")
-            self.say(f"Zone 3: Dragon, Troll")
+            self.say("🗺️  SHIP SECTORS")
+            self.say("Zone 1 (Drift Deck): Sentinel Drone, Boarding Android")
+            self.say("Zone 2 (Engine Ring): Boarding Android, Plasma Turret")
+            self.say("Zone 3 (Core Vault): Core Warden AI, Plasma Turret")
             return True
 
         if self.current_battle:
@@ -433,8 +439,8 @@ class Game:
 
     def run(self) -> None:
         """Main game loop."""
-        self.say("=== WHISPERING WILDS: DECK ROGUELIKE ===")
-        self.say("Draft cards, build a deck, conquer enemies across 3 zones.")
+        self.say("=== STARSHIP HEIST: DECK OPS ===")
+        self.say("Draft hacking tools, breach 3 ship sectors, and outplay security AIs.")
         self.say("Type 'start' to begin a new run.\n")
 
         while True:
