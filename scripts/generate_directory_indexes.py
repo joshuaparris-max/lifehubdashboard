@@ -327,7 +327,7 @@ def main() -> None:
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         )
         try:
-            (directory / "index.html").write_text(html)
+            (directory / "index.html").write_text(html, encoding="utf-8")
             print(f"Updated {directory}")
         except PermissionError:
             print(f"Skipping unwritable directory: {directory}")
