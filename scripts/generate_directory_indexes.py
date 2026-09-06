@@ -270,7 +270,24 @@ def build_file_table(directory: Path) -> str:
     return table.format(rows="\n        ".join(rows))
 
 
+def is_nested_repo(directory: Path) -> bool:
+    """True for a directory that is its own git repo (and not TARGET_ROOT).
+
+    Without this the walker writes LifeHub-titled listings into nested
+    projects such as Projects/Software/WhirringWilderness, where they were
+    committed to that project's history and clobbered its Vite entry point.
+    """
+    current = directory
+    while current != TARGET_ROOT and TARGET_ROOT in current.parents:
+        if (current / ".git").exists():
+            return True
+        current = current.parent
+    return False
+
+
 def should_skip(directory: Path) -> bool:
+    if is_nested_repo(directory):
+        return True
     parts = directory.parts
     if any(part in SKIP_DIR_NAMES for part in parts):
         return True
@@ -344,7 +361,7 @@ def main() -> None:
             generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
         )
         index_path = directory / "index.html"
-        if directory == root and is_protected_index(index_path):
+        if is_protected_index(index_path):
             print(f"Skipping hand-authored index: {index_path}")
             continue
         try:
