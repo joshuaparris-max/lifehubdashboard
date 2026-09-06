@@ -2,14 +2,14 @@
   "inboxCount": 6,
   "familyHealthCount": 288,
   "financeCount": 43,
-  "projectsCount": 1233,
+  "projectsCount": 1294,
   "housingCount": 32,
   "mediaCount": 104,
   "archiveCount": 10,
   "templatesCount": 1,
-  "lifehubSizeBytes": 5370315064,
-  "downloadsBacklog": 24,
-  "actionItemCount": 30,
+  "lifehubSizeBytes": 5366607586,
+  "downloadsBacklog": 0,
+  "actionItemCount": 6,
   "inboxWeeklyChange": 0,
   "inboxTrend": [
     {
@@ -37,5 +37,5 @@
       "cleared": 0
     }
   ],
-  "generatedAt": "2026-09-06T05:11:41.972564+00:00"
+  "generatedAt": "2026-09-06T08:12:45.851674+00:00"
 }

@@ -1329,7 +1329,13 @@
 
     async function checkUploader() {
       try {
-        const res = await fetch(UPLOADER_URL, { method: 'OPTIONS', mode: 'cors' });
+        // Fail fast when the daemon is down: without a timeout this probe is
+        // the slowest resource on the page (~400ms) on every load.
+        const res = await fetch(UPLOADER_URL, {
+          method: 'OPTIONS',
+          mode: 'cors',
+          signal: AbortSignal.timeout(1200)
+        });
         stateSpan.textContent = res.ok ? 'running' : 'reachable';
         return res.ok;
       } catch (err) {

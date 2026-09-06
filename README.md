@@ -33,7 +33,7 @@ The `dashboard.html` UI expects a few JSON feeds so each widget stays current:
 - **Directory indexes:** `python3 scripts/generate_directory_indexes.py` (also run with `--path ~/Downloads --max-depth 1` for Downloads)
 - **Backup status widget:** Update the timestamps in `automation/backups/status.json` (each automation run can drop a new ISO8601 value there) and run `python3 scripts/update_backup_status.py` to rewrite the `window.LIFEHUB_DATA.backups` block with real ages/notes. This script is part of `scripts/refresh_all.sh`.
 - **Pyodide text games:** `python3 scripts/build_text_game_sources.py`
-- **Copilot search index:** `python3 scripts/build_search_index.py` crawls the text-heavy areas so Copilot can match snippets/tags (this runs inside `scripts/refresh_all.sh`).
+- **Copilot search index:** `python3 scripts/build_search_index.py` crawls the text-heavy areas so Copilot can match snippets/tags (this runs inside `scripts/refresh_all.sh`). It indexes text files with a prose snippet, plus documents (PDF, Office, images) by filename only. Generated directory listings are skipped, and HTML is stripped to text so snippets are readable.
 - **Inline dashboard data:** `python3 scripts/build_dashboard_inline_data.py` snapshots the JSON/text feeds into `dashboard-inline-data.js` so `dashboard.html` works over `file://` without tripping Chrome’s CORS rules (this runs automatically via `scripts/refresh_all.sh`).
 
 Run `scripts/refresh_all.sh` (described below) to regenerate everything in one command. See `todo.md` for long-term improvements such as wiring automations directly into the dashboard.
@@ -54,7 +54,7 @@ Then open `http://localhost:8765/dashboard.html`. Stop the server with `Ctrl+C`.
 - `scripts/refresh_indexes.sh` – rebuilds every `index.html` under LifeHub plus `~/Downloads`, and syncs `directory.css` into each root.
 - `scripts/refresh_all.sh` – runs all data builders (stats, Welltory, recent-files, downloads feed, indexes, text-game sources). `make refresh-all` is a shorthand.
 - `python3 scripts/fetch_agenda_ics.py` – reads `automation/agenda/source.json` and refreshes `Resources/calendar.ics` from a remote/local feed (runs automatically inside `scripts/refresh_all.sh` when configured).
-- `python3 scripts/build_search_index.py` – scans text-friendly files and produces `search-index.json` so Copilot/command palette can match snippets and file contents.
+- `python3 scripts/build_search_index.py` – scans text-friendly files and produces `search-index.json` so Copilot/command palette can match snippets and file contents. Non-text documents are added by name so PDFs and scans stay findable. The dashboard loads this file lazily on first search; until then it uses the smaller inline index in `dashboard-inline-data.js`.
 - `python3 scripts/update_backup_status.py` – merges `automation/backups/targets.json` with the actual timestamps in `automation/backups/status.json`, computes whether each backup is overdue, and rewrites the dashboard widget.
 - `python3 scripts/setup_pyodide.py` – downloads the Pyodide runtime (`Resources/pyodide/`) so the embedded text adventures work offline; run this once, then refresh the dashboard.
 - `make downloads` – regenerates `downloads-feed.json` for the Downloads watcher.

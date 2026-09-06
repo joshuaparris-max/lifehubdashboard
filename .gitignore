@@ -4,7 +4,7 @@
 # Allow dashboard assets and docs
 !.gitignore
 !README.md
-!dashboard.html
+!index.html
 !dashboard.css
 !dashboard.js
 !dashboard-data.js
