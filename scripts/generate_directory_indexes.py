@@ -332,6 +332,25 @@ def is_protected_index(path: Path) -> bool:
         return True
 
 
+def strip_generated_at(html: str) -> str:
+    """Drop the generated-at timestamp so it alone does not count as a change."""
+    return re.sub(r"Generated \d{4}-\d{2}-\d{2} \d{2}:\d{2}", "Generated", html)
+
+
+def content_changed(path: Path, html: str) -> bool:
+    """True unless the only difference is the generated-at timestamp.
+
+    Rewriting every listing on every run dirtied a dozen tracked files and
+    buried real changes in diff noise.
+    """
+    if not path.exists():
+        return True
+    try:
+        return strip_generated_at(path.read_text(encoding="utf-8")) != strip_generated_at(html)
+    except OSError:
+        return True
+
+
 def main() -> None:
     global TARGET_ROOT, MAX_DEPTH, TITLE_LABEL
     args = parse_args()
@@ -363,6 +382,8 @@ def main() -> None:
         index_path = directory / "index.html"
         if is_protected_index(index_path):
             print(f"Skipping hand-authored index: {index_path}")
+            continue
+        if not content_changed(index_path, html):
             continue
         try:
             index_path.write_text(html, encoding="utf-8")

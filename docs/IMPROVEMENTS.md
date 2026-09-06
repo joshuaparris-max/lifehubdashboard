@@ -40,11 +40,20 @@ function properly instead.
 `index.html` files into that separate git repo, where seven of them are now
 committed. It should skip any directory containing `.git`.
 
-## 6. Untrack regenerable data files
+## 6. Untrack regenerable data files — PARTLY DONE
+
+The directory listings no longer churn: `content_changed()` compares
+ignoring the generated-at timestamp, so a run that changes nothing writes
+nothing and leaves a clean tree. The four regenerable JSON files
+(`dashboard-stats`, `recent-files`, `downloads-feed`, `welltory-summary`)
+are still tracked and still churn.
+
+<details><summary>original entry</summary>
 
 `dashboard-stats.json`, `recent-files.json`, `downloads-feed.json` and
 `welltory-summary.json` are build output but tracked, so every refresh run
 dirties the tree and buries real changes in diff noise.
+</details>
 
 ## 7. Investigate the skipped Jest suite
 
