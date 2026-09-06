@@ -5,7 +5,12 @@
   "stressAverage": 38.3,
   "energyAverage": 65.3,
   "focusAverage": 72.3,
-  "previousMeasurement": null,
-  "deltas": {},
-  "updatedAt": "2025-12-21T10:55:31.339601+00:00"
+  "previousMeasurement": "2025-12-11T20:42:45",
+  "deltas": {
+    "stress": 0.0,
+    "energy": 0.0,
+    "focus": 0.0,
+    "measurementCount": 0.0
+  },
+  "updatedAt": "2026-09-06T05:11:42.409299+00:00"
 }

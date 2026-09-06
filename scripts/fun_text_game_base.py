@@ -3,6 +3,7 @@
 # ===========================
 from __future__ import annotations
 from typing import Dict, List, Optional
+import difflib
 import random
 
 # ---------- Data Models ----------
@@ -31,6 +32,38 @@ class Room:
     def link(self, direction: str, other_room_id: str) -> None:
         self.neighbors[direction] = other_room_id
 
+
+
+CANONICAL_NPCS = {
+    "caretaker": {
+        "id": "caretaker",
+        "name": "Caretaker",
+        "role": "Keeper of the Sanctum",
+        "personality": "You are cryptic, slightly tired, but ultimately helpful. You speak in short, metaphor-heavy sentences. You know about the rusty key in the Sanctum, and the locked gate to the east.",
+        "knowledge": ["The rusty key unlocks the east gate", "The forest lies beyond the gate", "You are the caretaker of this ancient sanctum"]
+    },
+    "trader": {
+        "id": "trader",
+        "name": "Trader",
+        "role": "Merchant of the Wilds",
+        "personality": "You are pragmatic, profit-driven, and straightforward. You crave fresh fish from the lake.",
+        "knowledge": ["I buy fresh fish for 5 gold", "I can buy the lost ring for 6 gold", "I have the 'angler_aid' quest"]
+    },
+    "ranger": {
+        "id": "ranger",
+        "name": "Ranger",
+        "role": "Guardian of the Camp",
+        "personality": "You are rugged, watchful, and practical. You need ore to fix buckles and stove-pins.",
+        "knowledge": ["I need two lumps of ore to fix things", "I have the 'mine_matters' quest", "The camp is a safe place to rest"]
+    },
+    "hermit": {
+        "id": "hermit",
+        "name": "Hermit",
+        "role": "Wandering Alchemist",
+        "personality": "You are eccentric, wise, and slightly disconnected from reality. You brew salves that need glowcaps.",
+        "knowledge": ["I need three glowcaps to make my salve gleam", "I have the 'hermit_glow' quest", "Glowcaps grow in damp places like the mine or cellar"]
+    }
+}
 
 class Player:
     def __init__(self):
@@ -133,6 +166,9 @@ class Game:
         self.world.start_room = "sanctum"
         self.cur_room = self.world.start_room
         self._built = True
+        self.active_conversation_npc_id = None
+        self.conversation_room = None
+        self.conversation_req_id = 0
 
 
 
@@ -196,7 +232,13 @@ class Game:
         if r.id == "gate" and d == "e" and "rust_key" not in self.player.inv:
             self.say("The gate is locked. A keyhole awaits a fitting key.")
             return
-        self.cur_room = r.neighbors[d]
+            
+        nxt = r.neighbors[d]
+        if getattr(self, "active_conversation_npc_id", None):
+            self.say(f"Your conversation with the {self.active_conversation_npc_id} ends.")
+            self._end_conversation()
+            
+        self.cur_room = nxt
         self.look()
 
     def look(self) -> None:
@@ -270,21 +312,149 @@ class Game:
         self.say(f"You are at: {self.room().name}")
         self.say("Legend: @ you, · visited, ? known (unvisited), blank = off-map")
 
-    def talk(self, who: str) -> None:
-        if who.lower() == "caretaker" and self.cur_room == "sanctum":
-            self.say('Caretaker: "Keys open ways, traveler. Try the east gate."')
-        else:
-            self.say(f"No response from {who}.")
+    def _end_conversation(self):
+        if getattr(self, "active_conversation_npc_id", None):
+            self.active_conversation_npc_id = None
+            self.conversation_room = None
+            self.conversation_req_id = getattr(self, "conversation_req_id", 0) + 1
+
+    def _process_dialogue_command(self, cmd: str, args: list, line: str) -> None:
+        room = self.room()
+        npcs_here = list(getattr(room, "npcs", []))
+        
+        def find_npc(name: str):
+            if not name: return None
+            name = name.lower()
+            for n in npcs_here:
+                if name == n.lower() or name in n.lower() or n.lower() in name:
+                    return n
+            return None
+
+        # Validate active conversation
+        if getattr(self, "active_conversation_npc_id", None):
+            if getattr(self, "conversation_room", None) != self.cur_room or not find_npc(self.active_conversation_npc_id):
+                self._end_conversation()
+
+        if cmd in ("talk", "hello", "hi", "greet", "greetings"):
+            target_str = " ".join(args).lower().strip()
+            if target_str.startswith("to "): target_str = target_str[3:]
+            
+            active_npc = getattr(self, "active_conversation_npc_id", None)
+            
+            # If greeting while already in a conversation with someone
+            if cmd in ("hello", "hi", "greet", "greetings") and active_npc:
+                # If target is specified and it's someone else, switch. Otherwise treat as speech.
+                if target_str and find_npc(target_str) and find_npc(target_str) != active_npc:
+                    pass # let it fall through to NPC switch logic below
+                else:
+                    self._emit_dialogue_request(active_npc, line)
+                    return
+            
+            if not npcs_here:
+                if cmd in ("hello", "hi", "greet", "greetings"):
+                    self.say("There's nobody here to greet.")
+                else:
+                    self.say("There is no one here to talk to.")
+                return
+                
+            actual_npc = None
+            if not target_str:
+                if len(npcs_here) == 1:
+                    actual_npc = npcs_here[0]
+                else:
+                    verb = "greet" if cmd in ("hello", "hi", "greet", "greetings") else "talk to"
+                    self.say(f"Who do you want to {verb}? " + ", ".join(npcs_here))
+                    return
+            else:
+                actual_npc = find_npc(target_str)
+                if not actual_npc:
+                    verb = "greet" if cmd in ("hello", "hi", "greet", "greetings") else "talk to"
+                    self.say(f"There is no one named '{target_str}' here to {verb}.")
+                    return
+            
+            if active_npc == actual_npc:
+                if cmd == "talk":
+                    self.say(f"You're already talking with the {actual_npc}.")
+                else:
+                    self._emit_dialogue_request(actual_npc, line)
+                return
+            
+            if active_npc and active_npc != actual_npc:
+                self.say(f"You end your conversation with the {active_npc} and turn to the {actual_npc}.")
+                self._end_conversation()
+            else:
+                self.say(f"You begin talking with the {actual_npc}.")
+                
+            self.active_conversation_npc_id = actual_npc
+            self.conversation_room = self.cur_room
+            self.conversation_req_id = getattr(self, "conversation_req_id", 0) + 1
+            
+            if cmd in ("hello", "hi", "greet", "greetings"):
+                self._emit_dialogue_request(actual_npc, line)
+            
+        elif cmd == "say":
+            if not getattr(self, "active_conversation_npc_id", None):
+                self.say("You're not currently talking to anyone.")
+                return
+            actual_npc = find_npc(self.active_conversation_npc_id)
+            if not actual_npc:
+                self.say("They are no longer here.")
+                self.active_conversation_npc_id = None
+                return
+            msg = " ".join(args)
+            if not msg:
+                self.say("Say what?")
+                return
+            self._emit_dialogue_request(actual_npc, msg)
+            
+        elif cmd == "ask":
+            if not args:
+                self.say("Ask who what?")
+                return
+            actual_npc = find_npc(args[0])
+            if not actual_npc:
+                self.say(f"There is no one named '{args[0]}' here to ask.")
+                return
+            msg = " ".join(args[1:])
+            if not msg:
+                self.say("Ask them what?")
+                return
+            self._emit_dialogue_request(actual_npc, msg)
+
+    def _emit_dialogue_request(self, actual_npc: str, msg: str) -> None:
+        room = self.room()
+        npc_id = actual_npc.lower().replace(" ", "_")
+        canonical = globals().get("CANONICAL_NPCS", {}).get(npc_id, {})
+        
+        self.conversation_req_id = getattr(self, "conversation_req_id", 0) + 1
+        
+        context = {
+            "valid": True,
+            "reqId": self.conversation_req_id,
+            "npcId": npc_id,
+            "npcName": actual_npc,
+            "roomId": self.cur_room,
+            "playerLocation": room.name,
+            "npcsPresent": list(getattr(room, "npcs", [])),
+            "promptText": msg,
+            "npcLore": canonical.get("personality", ""),
+            "npcKnowledge": canonical.get("knowledge", []),
+            "worldContext": {
+                "room_desc": room.desc,
+                "inventory": [it.name for it in self.player.inv.values()],
+                "hp": getattr(self.player, "hp", 10),
+                "max_hp": getattr(self.player, "max_hp", 10)
+            },
+            "error": None
+        }
+        self.lifehub_dialogue_pending = context
+
 
     def take(self, name: str) -> None:
         r = self.room()
-        wanted = name.strip().lower()
+        wanted = self._normalize_item_query(name)
         for i, it in enumerate(r.items):
-            id_l = it.id.lower()
-            nm_l = it.name.lower()
-            # accept exact id/name OR any substring match
-            if (wanted == id_l or wanted == nm_l or
-                    (wanted and (wanted in id_l or wanted in nm_l))):
+            if self._item_matches_query(it, wanted):
                 self.player.add_item(it)
                 r.items.pop(i)
                 self.say(f"You take the {it.name}.")
@@ -292,9 +462,11 @@ class Game:
         self.say("No such item here.")
 
     def drop(self, name: str) -> None:
+        wanted = self._normalize_item_query(name)
         it = None
         for k in list(self.player.inv.keys()):
-            if name.lower() in (k, self.player.inv[k].name.lower()):
+            item = self.player.inv[k]
+            if self._item_matches_query(item, wanted):
                 it = self.player.remove_item(k)
                 break
         if it:
@@ -305,9 +477,10 @@ class Game:
 
     def use(self, name: str) -> None:
         inv = self.player.inv
+        wanted = self._normalize_item_query(name)
         target = None
         for it in inv.values():
-            if name.lower() in (it.id, it.name.lower()):
+            if self._item_matches_query(it, wanted):
                 target = it
                 break
         if not target:
@@ -352,12 +525,71 @@ class Game:
     def stats(self) -> None:
         self.say(f"HP: {self.player.hp}/{self.player.max_hp}")
 
+    def _normalize_item_query(self, raw: str) -> str:
+        text = " ".join((raw or "").strip().lower().split())
+        for prefix in ("the ", "a ", "an ", "my "):
+            if text.startswith(prefix):
+                text = text[len(prefix):]
+        return text
+
+    def _item_matches_query(self, item: Item, wanted: str) -> bool:
+        if not wanted:
+            return False
+        id_l = item.id.lower().replace("_", " ")
+        nm_l = item.name.lower()
+        if wanted == id_l or wanted == nm_l:
+            return True
+        if wanted in id_l or wanted in nm_l:
+            return True
+        wanted_tokens = wanted.split()
+        candidate_tokens = (id_l + " " + nm_l).split()
+        return all(
+            any(tok == cand or cand.startswith(tok) or tok in cand for cand in candidate_tokens)
+            for tok in wanted_tokens
+        )
+
     def help(self) -> None:
         self.say(
-            "Commands: help, look, move n/s/e/w (or: go n/s/e/w), "
-            "take [item], drop [item], use [item], talk [name], "
-            "inv, map, stats, quit"
+            "=== Commands ===\n"
+            "MOVEMENT: n, s, e, w, move [dir]\n"
+            "ACTIONS: take [item], drop [item], use [item], eat [item], inspect [item], equip [item], unequip [slot]\n"
+            "DIALOGUE: talk [npc], ask [npc] [question], say [text], goodbye\n"
+            "         (While actively talking to someone, normal sentences become dialogue)\n"
+            "SURVIVAL: attack, rest, forage, hunt, fish, mine, harvest, cook, camp, craft [item]\n"
+            "SHOPPING: buy [item], sell [item]\n"
+            "PROGRESSION: quests, journal, bestiary, lore, note [text], notes\n"
+            "INFO: look, inv, map, stats, help\n"
+            "SYSTEM: save, load, options, quit\n"
         )
+
+    def _suggest_command(self, cmd: str, args: List[str]) -> Optional[str]:
+        aliases = {
+            "inventory": "inv",
+            "invetory": "inv",
+            "invenotry": "inv",
+            "bag": "inv",
+            "backpack": "inv",
+            "i": "inv",
+            "inspect": "look",
+            "l": "look",
+            "speak": "talk",
+            "talkto": "talk",
+            "walk": "move",
+            "tak": "take",
+        }
+        if cmd in aliases:
+            target = aliases[cmd]
+            return f"{target} {' '.join(args)}".strip()
+
+        known = [
+            "help", "look", "move", "go", "take", "drop", "use", "unlock", "open",
+            "talk", "inv", "map", "stats", "n", "s", "e", "w",
+        ]
+        match = difflib.get_close_matches(cmd, known, n=1, cutoff=0.72)
+        if match:
+            target = match[0]
+            return f"{target} {' '.join(args)}".strip()
+        return None
 
     def dispatch(self, line: str) -> bool:
         parts = line.strip().split()
@@ -381,23 +613,40 @@ class Game:
         if cmd == "look":
             self.look()
             return True
+        if cmd in ("n", "s", "e", "w", "north", "south", "east", "west"):
+            self.move(cmd)
+            return True
         if cmd in ("move", "go"):
             if args:
                 self.move(args[0])
             else:
                 self.say("Use: move n/s/e/w")
             return True
-        if cmd == "take":
+        if cmd in ("take", "get", "pickup", "pick"):
+            if args and args[0] == "up": args = args[1:]
             self.take(" ".join(args))
             return True
         if cmd == "drop":
             self.drop(" ".join(args))
             return True
-        if cmd == "use":
+        if cmd in ("use", "eat", "consume"):
+            wanted = " ".join(args).strip().lower()
+            if cmd in ("eat", "consume") and "apple" not in wanted:
+                self.say(f"You can't {cmd} the {wanted}.")
+                return True
             self.use(" ".join(args))
             return True
-        if cmd == "talk":
-            self.talk(" ".join(args))
+        if cmd in ("unlock", "open"):
+            if self.cur_room != "gate":
+                self.say("There's nothing obvious to unlock here.")
+                return True
+            if "rust_key" not in self.player.inv:
+                self.say("You need a key for this lock.")
+                return True
+            self.use("rust key")
+            return True
+        if cmd in ("talk", "ask", "say", "hello", "hi", "greet"):
+            self._process_dialogue_command(cmd, args, line)
             return True
         if cmd == "inv":
             self.inv()
@@ -409,7 +658,39 @@ class Game:
             self.stats()
             return True
 
-        self.say("Unknown command. Try 'help'.")
+        # Explicit conversation exit
+        full_line = line.lower().strip()
+        if cmd in ("goodbye", "bye") or full_line in ("leave conversation", "end conversation"):
+            if getattr(self, "active_conversation_npc_id", None):
+                self.say(f"You end your conversation with the {self.active_conversation_npc_id}.")
+                self._end_conversation()
+            else:
+                self.say("You aren't talking to anyone.")
+            return True
+
+        # Conversational fallback
+        active_npc = getattr(self, "active_conversation_npc_id", None)
+        if active_npc:
+            room = self.room()
+            npcs_here = list(getattr(room, "npcs", []))
+            def find_npc(name):
+                for n in npcs_here:
+                    if name.lower() in n.lower() or n.lower() in name.lower(): return n
+                return None
+            if getattr(self, "conversation_room", None) == self.cur_room and find_npc(active_npc):
+                self._emit_dialogue_request(active_npc, line)
+                return True
+            else:
+                self._end_conversation()
+
+        suggestion = self._suggest_command(cmd, args)
+        if suggestion:
+            self.say(f"Unknown command. Did you mean: {suggestion}")
+        else:
+            if "?" in line and not active_npc:
+                self.say("You're not currently talking to anyone. Try `talk [npc]`.")
+            else:
+                self.say("Unknown command. Try 'help'.")
         return True
 
     def run(self) -> None:
@@ -475,9 +756,6 @@ def p2_ext_handle_command(cmd, args, game):
             game.say("You rest, but you're already at full health.")
         return True
 
-    if cmd == "help":
-        print("Part 2 adds: attack, rest (recover HP), XP, bandages")
-        return False
 
     if cmd == "stats":
         if game and hasattr(game, "_p2"):
@@ -607,11 +885,6 @@ def p3_ext_handle_command(cmd, args, game):
     # Use the captured previous handler if it isn't ourselves
     prev = P3_PREV_EXT if P3_PREV_EXT is not p3_ext_handle_command else None
 
-    if cmd == "help":
-        print("Part 3 adds: forage, craft bandage, buy [item], sell [item]")
-        if prev and prev(cmd, args, game):
-            return True
-        return False
 
     if cmd == "forage":
         _p3_forage(game)
@@ -811,11 +1084,6 @@ def p4_ext_handle_command(cmd, args, game):
     # Use the captured previous handler if it isn't ourselves
     prev = P4_PREV_EXT if P4_PREV_EXT is not p4_ext_handle_command else None
 
-    if cmd == "help":
-        print("Part 4 adds: note [text], journal, erase [n], options hardmode on/off, save, load [code]")
-        if prev and prev(cmd, args, game):
-            return True
-        return False
 
     if cmd == "note":
         _p4_note(game, " ".join(args))
@@ -1018,12 +1286,6 @@ def p5_ext_handle_command(cmd, args, game):
     # Use the captured previous handler if it isn't ourselves
     prev = P5_PREV_EXT if P5_PREV_EXT is not p5_ext_handle_command else None
 
-    # Augment help (do not consume)
-    if cmd == "help":
-        print("Part 5 adds: hunt (force encounter), bestiary, lore [name].")
-        if prev and prev(cmd, args, game):
-            return True
-        return False
 
     # If attacking during our encounter, we handle it; else defer to Part 2.
     if cmd == "attack":
@@ -1237,35 +1499,13 @@ def _p6_cmd_talk(game, args) -> bool:
     if not game:
         print("You speak into the void. (Base game not loaded)")
         return True
-    # Caretaker in Sanctum
-    if who in ("caretaker", "the caretaker") and getattr(game, "cur_room", "") == "sanctum":
-        _p6_open_caretaker_dialog(game)
-        return True
     return False  # let base or earlier parts handle
 
 def _p6_cmd_say(game, args) -> bool:
     if not game:
         print("Your words vanish. (Base game not loaded)")
         return True
-    dlg = getattr(game, "_p6", {}).get("dialog")
-    if not dlg:
-        game.say("No one is listening.")
-        return True
-    if not args:
-        game.say("Say which number?")
-        return True
-    try:
-        idx = int(args[0]) - 1
-    except ValueError:
-        game.say("Say a number like: say 1")
-        return True
-    options = dlg["options"]
-    if 0 <= idx < len(options):
-        _text, action_id = options[idx]
-        _p6_do_action(game, action_id)
-    else:
-        game.say("No such option.")
-    return True
+    return False
 
 def _p6_cmd_accept(game, args) -> bool:
     if not game:
@@ -1342,11 +1582,6 @@ def p6_ext_handle_command(cmd, args, game):
     # Use the captured previous handler if it isn't ourselves
     prev = P6_PREV_EXT if P6_PREV_EXT is not p6_ext_handle_command else None
 
-    if cmd == "help":
-        print("Part 6 adds: talk caretaker (dialogue), say [n] (choose), quests, accept heal_grove, turnin heal_grove")
-        if prev and prev(cmd, args, game):
-            return True
-        return False
 
     if cmd == "talk":
         if _p6_cmd_talk(game, args):
@@ -1643,22 +1878,6 @@ def _p7_use_patch(game, name: str) -> bool:
 
 # ---------- NPC talk & quest offers (simple) ----------
 def _p7_cmd_talk(game, args) -> bool:
-    who = " ".join(args).strip().lower()
-    if not who:
-        return False
-    # Trader at Post
-    if who in ("trader", "the trader") and _p7_here(game, "wilds_post"):
-        game.say('Trader: "Bring me fresh fish and I’ll make it worth your while." (Type: accept angler_aid)')
-        return True
-    # Ranger at Camp
-    if who in ("ranger", "the ranger") and _p7_here(game, "wilds_camp"):
-        game.say('Ranger: "Ore for stove-pins and buckles—two lumps should do." (Type: accept mine_matters)')
-        return True
-    # Hermit in Hut (the hut has no direct link; he often wanders the Wilds)
-    if who in ("hermit", "the hermit"):
-        # If we ever link the hut physically, check it; otherwise allow from Wilds
-        game.say('Hermit: "Glowcaps, child. Three will make the salve gleam." (Type: accept hermit_glow)')
-        return True
     return False
 
 # ---------- Quest helpers piggybacking Part 6 ----------
@@ -1899,11 +2118,6 @@ def p7_ext_handle_command(cmd, args, game):
             return True
         return prev(cmd, args, game) if prev else False
 
-    # Augment help without consuming earlier parts' help
-    if cmd == "help":
-        print("Part 7 adds: fish (lake), mine (mine), harvest (glowcaps), cook (at camp), camp (rest),")
-        print("             talk trader/ranger/hermit, give [item] [npc], new quests: angler_aid, mine_matters, hermit_glow")
-        return prev(cmd, args, game) if prev else False
 
     # Accept our new quests (coexists with Part 6 accept)
     if cmd == "accept":

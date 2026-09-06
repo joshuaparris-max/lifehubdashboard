@@ -76,7 +76,7 @@
     const list = document.getElementById('settings-list');
     const saveBtn = document.getElementById('settings-save');
     const resetBtn = document.getElementById('settings-reset');
-    let current = load();
+    const current = load();
     // Try to detect panels from the dashboard opener to show everything the user can hide
     (async function populate() {
       let sections = DEFAULT_SECTIONS.slice();
@@ -114,7 +114,7 @@
       const nodes = Array.from(list.querySelectorAll('input[type=checkbox]'));
       const obj = {};
       nodes.forEach(n => { obj[n.dataset.selector] = true; });
-      buildList(list, obj, Array.from(list.querySelectorAll('.setting-item')).map((_, i) => { /* keep existing DOM items */ }));
+      buildList(list, obj, Array.from(list.querySelectorAll('.setting-item')).map(() => { /* keep existing DOM items */ }));
       applyToPage(obj);
       alert('Settings reset.');
     });

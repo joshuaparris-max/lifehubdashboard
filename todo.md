@@ -31,6 +31,18 @@
 - [ ] Harden persistence: validate save payloads, expose a “reset slots” button, and consider iCloud/disk-backed saves to survive storage clears.
 - [ ] Share a single Pyodide instance between both games and preload via `setup_pyodide.py` for faster startup/offline use.
 
+## Fun Text Game 2025 Backlog
+- [x] 1. Add smarter unknown-command suggestions (typo/helpful alias hints instead of dead-end errors).
+- [ ] 2. Add `hint` command with contextual progression nudges (room + quest state aware).
+- [ ] 3. Add `examine [item|npc|room]` for richer descriptions and clue discovery.
+- [ ] 4. Add simple quest tracker UI command (`questlog`) with objectives and completion status.
+- [ ] 5. Add fast-travel checkpoints unlocked after first visit (camp, post, sanctum).
+- [ ] 6. Add lightweight crafting recipes browser (`recipes`) with requirements preview.
+- [ ] 7. Add NPC affinity/reputation values that unlock dialogue and small perks.
+- [ ] 8. Add adaptive combat pacing options (`combat speed slow|normal|fast`) for readability.
+- [ ] 9. Add turn transcript export (`transcript save`) to local text for sharing/debugging.
+- [ ] 10. Add seed control and deterministic replay (`seed`, `replay`) for challenge runs.
+
 ## Scripts & Data
 - [x] Extend `scripts/update_dashboard_stats.py` to include additional KPIs (folder size, week-over-week change, items needing action) and surface them in the stats widget.
 - [x] Provide a helper command (npm/pnpm script or Makefile) that runs `python3 scripts/build_text_game_sources.py` automatically when text-game Python files change.

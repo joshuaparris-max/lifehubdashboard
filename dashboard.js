@@ -8,6 +8,19 @@
       // Replace fetch with a lightweight shim that returns safe defaults for JSON/text
       const _origFetch = window.fetch && window.fetch.bind(window);
       window.fetch = async function(file, opts){
+        // In file:// mode, allow real network requests to proceed (Pyodide/Groq need this)
+        if (isFileProtocol && _origFetch) {
+          return _origFetch(file, opts);
+        }
+        // Allow real network calls for trusted hosts (Groq API, Pyodide CDN) even in file:// mode
+        const url = typeof file === "string" ? file : (file && file.url) ? file.url : "";
+        const isHttp = /^https?:\/\//i.test(url);
+        const allowGroq = /^https?:\/\/api\.groq\.com/i.test(url);
+        const allowPyodide = /pyodide/i.test(url) || /\.wasm($|\?)/i.test(url) || /\.data($|\?)/i.test(url) || /\.zip($|\?)/i.test(url);
+        // If any http(s) request is made, let it pass through (especially Pyodide/Groq)
+        if (_origFetch && (isHttp || allowGroq || allowPyodide)) {
+          return _origFetch(file, opts);
+        }
         try {
           console.info(`LifeHub offline-mode: intercepted fetch -> ${file}`);
           // Return a generic empty successful Response with JSON body for JSON requests
@@ -317,6 +330,10 @@ const textGamePanel = document.getElementById("text-game-panel");
 const textGameV2Panel = document.getElementById("text-game-v2-panel");
 const textGameAutosaveToggle = document.getElementById("text-game-autosave");
 const textGameV2AutosaveToggle = document.getElementById("text-game-v2-autosave");
+const textGameGroqToggle = document.getElementById("text-game-groq");
+const textGameV2GroqToggle = document.getElementById("text-game-v2-groq");
+const textGameGroqHintButton = document.getElementById("text-game-groq-hint");
+const textGameV2GroqHintButton = document.getElementById("text-game-v2-groq-hint");
 const textGameMapOutput = document.getElementById("text-game-map-output");
 const textGameV2MapOutput = document.getElementById("text-game-v2-map-output");
 const npcPanel = document.getElementById("npc-panel");
@@ -328,6 +345,13 @@ const npcReward = document.getElementById("npc-reward");
 const npcReroll = document.getElementById("npc-reroll");
 const npcAvatar = document.getElementById("npc-avatar");
 const npcAvatarImg = document.getElementById("npc-avatar-img");
+const npcGroqKeyInput = document.getElementById("npc-groq-key");
+const npcGroqSaveButton = document.getElementById("npc-groq-save");
+const npcChatInput = document.getElementById("npc-chat-input");
+const npcChatSend = document.getElementById("npc-chat-send");
+const npcChatClear = document.getElementById("npc-chat-clear");
+const npcChatLog = document.getElementById("npc-chat-log");
+const npcChatStatus = document.getElementById("npc-chat-status");
 const textGameSlotSelect = document.querySelector("#text-game-slot");
 const textGameSaveStatus = document.querySelector("#text-game-save-status");
 const textGameV2SlotSelect = document.querySelector("#text-game-v2-slot");
@@ -339,6 +363,11 @@ const questReward = document.querySelector("#quest-reward");
 const questStreak = document.querySelector("#quest-streak");
 const questCompleteButton = document.querySelector("#quest-complete");
 const questRerollButton = document.querySelector("#quest-reroll");
+const dailyModifierName = document.querySelector("#daily-modifier-name");
+const dailyModifierSummary = document.querySelector("#daily-modifier-summary");
+const dailyModifierMeta = document.querySelector("#daily-modifier-meta");
+const dailyModifierFlavor = document.querySelector("#daily-modifier-flavor");
+const dailyModifierReroll = document.querySelector("#daily-modifier-reroll");
 
 // --- LifeHub RPG: Quest & XP basics (persistent) ---------------------------
 
@@ -405,6 +434,51 @@ function readJsonWithMigration(key, defaultValue, migrateFn) {
   }
 }
 
+async function groqTavernLine() {
+  const stats = statElements.length ? Array.from(statElements).reduce((acc, el) => {
+    const key = el.dataset?.stat;
+    const value = el.textContent;
+    if (key) acc[key] = value;
+    return acc;
+  }, {}) : {};
+  const modifier = dailyModifierName?.textContent || "";
+  const prompt = [
+    { role: "system", content: "You are a tavern bard dropping a one-line tavern talk for a productivity dashboard. Keep it under 20 words, playful, reference chores/stats lightly. Avoid instructions. One line only." },
+    { role: "user", content: `Stats: ${JSON.stringify(stats)}. Daily modifier: ${modifier || "none"}. Reply with one tavern line.` },
+  ];
+  try {
+    const { reply } = await callGroq(prompt, { maxTokens: 60, temperature: 0.9 });
+    if (reply && tavernLine) {
+      tavernLine.textContent = `Groq: ${reply.trim()}`;
+      tavernMeta.textContent = "Groq-flavored line · rotates every 7s";
+    }
+  } catch (e) {
+    // ignore; fallback stays
+  }
+}
+
+async function groqDiceFlavor(text) {
+  try {
+    const { reply } = await callGroq(
+      [
+        { role: "system", content: "You are a playful GM narrator. Provide a 1-sentence flavor line for a dice or loot roll. Keep it under 18 words. Do not repeat the roll text." },
+        { role: "user", content: `Roll context: ${text}. Reply with a single-sentence flavor.` },
+      ],
+      { maxTokens: 60, temperature: 0.85 }
+    );
+    if (reply && diceLog) {
+      const li = document.createElement("li");
+      li.textContent = `GM: ${reply.trim()}`;
+      li.classList.add("from-npc");
+      diceLog.prepend(li);
+      const items = Array.from(diceLog.querySelectorAll("li"));
+      items.slice(12).forEach((item) => item.remove());
+    }
+  } catch (e) {
+    // ignore; silent fallback
+  }
+}
+
 const RPG_STORAGE_KEY = "lifehub-rpg-state";
 
 function loadRpgState() {
@@ -441,6 +515,7 @@ function xpToLevel(xp) {
 }
 
 function updateXpBadge() {
+  if (!xpLevelEl || !xpMetaEl || !xpProgressEl) return;
   const info = xpToLevel(rpgState.xp || 0);
   xpLevelEl.textContent = `Lv ${info.level}`;
   xpMetaEl.textContent = `${info.xpInLevel} / ${info.levelXpRequirement} XP`;
@@ -483,6 +558,7 @@ function getActiveQuest() {
 }
 
 function renderActiveQuest() {
+  if (!questTitle || !questSummary || !questGoal || !questReward || !questStreak) return;
   const q = getActiveQuest();
   if (!q) {
     questTitle.textContent = "No active quest";
@@ -542,6 +618,41 @@ if (questRerollButton) {
     rpgState.quests.push(newQ);
     saveRpgState(rpgState);
     renderActiveQuest();
+  });
+}
+
+const questGroqButton = document.querySelector("#quest-groq-reroll");
+if (questGroqButton) {
+  questGroqButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+    questGroqButton.disabled = true;
+    questGroqButton.textContent = "Calling Groq…";
+    try {
+      const quest = await groqQuestSuggestion();
+      if (quest) {
+        rpgState.quests = rpgState.quests || [];
+        rpgState.quests = rpgState.quests.map((q) => ({ ...q, active: false }));
+        rpgState.quests.push(quest);
+        saveRpgState(rpgState);
+        renderActiveQuest();
+        setActionFeedback(`Groq quest: ${quest.title}`);
+      } else {
+        setActionFeedback("Groq quest failed; using existing quest.");
+      }
+    } catch (err) {
+      console.warn("Groq quest failed", err);
+      setActionFeedback("Groq quest failed; check key/network.");
+    } finally {
+      questGroqButton.textContent = "Groq reroll";
+      questGroqButton.disabled = false;
+    }
+  });
+}
+
+if (dailyModifierReroll) {
+  dailyModifierReroll.addEventListener('click', (e) => {
+    e.preventDefault();
+    rerollDailyModifier();
   });
 }
 
@@ -804,6 +915,7 @@ const AUTOMATION_DRY_RUN_KEY = "lifehub-automation-dryrun";
 const AUTOMATION_LAST_QUEUE_KEY = "lifehub-automation-lastqueue";
 const READABLE_FONT_KEY = "lifehub-readable-font";
 const NO_SHADOWS_KEY = "lifehub-no-shadows";
+const CONFETTI_ENABLED_KEY = "lh_confetti_enabled";
 const SETTINGS_EXPORT_FILENAME = "lifehub-settings.json";
 const BACKUP_SEVERITY_ORDER = { ok: 0, warning: 1, danger: 2 };
 const BACKUP_CADENCE_HOURS = {
@@ -1417,6 +1529,31 @@ const TEXT_GAME_EVENTS = [
     severity: "ok",
   },
 ];
+const DAILY_MODIFIERS = [
+  { id: "double-xp", name: "Festival of XP", summary: "+20% XP from dashboard actions today.", effect: "XP bonus" },
+  { id: "lucky-finds", name: "Lucky Finds", summary: "First download triage move today grants +10 XP.", effect: "Downloads luck" },
+  { id: "swift-steps", name: "Swift Steps", summary: "Focus mode + kiosk toggles feel snappier; enable focus for a calm boost.", effect: "Focus boost" },
+  { id: "merchant-day", name: "Merchant Day", summary: "Automation runs earn +10 XP; queue a preset.", effect: "Automation bonus" },
+  { id: "vault-scent", name: "Vault Scent", summary: "Resurface/open an old file to gain +8 XP.", effect: "Resurface bonus" },
+  { id: "bardic-winds", name: "Bardic Winds", summary: "Rolling dice today grants +5 XP on the first roll.", effect: "Dice bonus" },
+];
+const DAILY_MODIFIER_STATE_KEY = "lifehub-daily-mod";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODELS = ["llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma-7b-it"];
+const GROQ_KEY_STORAGE_KEY = "lh_groq_api_key";
+const NPC_CHAT_STORAGE_KEY = "lh_npc_chat";
+let groqReady =
+  (function () {
+    try {
+      return !!(localStorage.getItem(GROQ_KEY_STORAGE_KEY) || window.LIFEHUB_GROQ_KEY);
+    } catch (e) {
+      return !!window.LIFEHUB_GROQ_KEY;
+    }
+  })();
+
+function setGroqReady(flag) {
+  groqReady = !!flag;
+}
 let automationDryRun =
   (function () {
     try {
@@ -1438,11 +1575,21 @@ let pixelModeEnabled =
       return false;
     }
   })();
+let confettiEnabled =
+  (function () {
+    try {
+      const stored = localStorage.getItem(CONFETTI_ENABLED_KEY);
+      return stored === null ? true : stored === "1";
+    } catch (e) {
+      return true;
+    }
+  })();
 let konamiIndex = 0;
 let autoRefreshTimer = null;
 let autoRefreshMinutes = 5;
 let autoRefreshEnabled = true;
 let autoRefreshLastRefresh = Date.now();
+try { window.confettiEnabled = confettiEnabled; } catch (e) {}
 let autoRefreshTypingTimeout = null;
 const XP_STORAGE_KEY = "lifehub_xp";
 const XP_PER_LEVEL = 100;
@@ -1656,7 +1803,18 @@ def lifehub_intro():
 
 def lifehub_command(line):
     out, keep = _lifehub_capture(GAME.dispatch, line)
-    return json.dumps({"output": out, "keep_running": bool(keep)})
+    payload = {"output": out, "keep_running": bool(keep), "room_id": getattr(GAME, "cur_room", None)}
+    if hasattr(GAME, "lifehub_dialogue_pending") and getattr(GAME, "lifehub_dialogue_pending", None):
+        payload["lifehub_dialogue"] = GAME.lifehub_dialogue_pending
+        GAME.lifehub_dialogue_pending = None
+    return json.dumps(payload)
+
+def lifehub_current_room():
+    return getattr(GAME, "cur_room", None)
+
+def lifehub_current_req():
+    return getattr(GAME, "conversation_req_id", 0)
+
 
 def lifehub_room_npcs():
     try:
@@ -1692,6 +1850,9 @@ let lastTextGameOutput = "";
 let lastTextGameV2Output = "";
 const TEXT_GAME_AUTOSAVE_KEY = "lifehub-game-autosave";
 const TEXT_GAME_V2_AUTOSAVE_KEY = "lifehub-game-autosave-v2";
+const TEXT_GAME_GROQ_KEY = "lifehub-game-groq";
+const TEXT_GAME_V2_GROQ_KEY = "lifehub-game-groq-v2";
+const NPC_CHAT_VERB_RE = /^(talk|ask|say|hello|hi|hug|introduce|tell)\b/i;
 const NPC_STORAGE_KEY = "lifehub-npc";
 const PANEL_ICON_MAP = {
   "copilot-panel": "🔍",
@@ -2003,6 +2164,7 @@ function loadDisplayPreferences() {
     calm: get("lh_mode_calm") === "true",
     readable: get("lh_readable_font") === "true",
     noShadows: get("lh_no_shadows") === "true",
+    confetti: confettiEnabled,
     pixel: pixelModeEnabled,
     autoRefreshEnabled: loadAutoRefreshEnabled(),
     autoRefreshMinutes: loadAutoRefreshMinutes(),
@@ -2028,6 +2190,11 @@ function applyDisplayPreferences(prefs) {
     localStorage.setItem("lh_readable_font", prefs.readable ? "true" : "false");
     localStorage.setItem("lh_no_shadows", prefs.noShadows ? "true" : "false");
   } catch (e) {}
+  confettiEnabled = prefs.confetti !== false;
+  try {
+    localStorage.setItem(CONFETTI_ENABLED_KEY, confettiEnabled ? "1" : "0");
+  } catch (e) {}
+  try { window.confettiEnabled = confettiEnabled; } catch (e) {}
   pixelModeEnabled = !!prefs.pixel;
   try {
     localStorage.setItem(PIXEL_MODE_KEY, pixelModeEnabled ? "1" : "0");
@@ -2155,6 +2322,143 @@ function rerollQuest() {
   renderQuestBoard();
 }
 
+async function groqQuestSuggestion() {
+  if (!groqReady) throw new Error("Groq not enabled");
+  const stats = statElements.length ? Array.from(statElements).reduce((acc, el) => {
+    const key = el.dataset?.stat;
+    const val = el.textContent;
+    if (key) acc[key] = val;
+    return acc;
+  }, {}) : {};
+  const files = (recentFilesFlat || []).slice(0, 6).map((f) => `${f.area}: ${f.path}`);
+  const prompt = [
+    { role: "system", content: "You are a quest-giver for a personal dashboard. Propose one short quest about files/automation/backups. Return a JSON object with keys: title (6 words max), desc (1 sentence), goal (integer 1-5), xp (integer 10-60). Keep it practical (Inbox, Downloads, Finance, Backups). Do not include markdown." },
+    { role: "user", content: `Stats: ${JSON.stringify(stats)}. Recent files: ${files.join(" | ") || "none"}. Daily modifier: ${dailyModifierName?.textContent || "none"}.` },
+  ];
+  const { reply } = await callGroq(prompt, { maxTokens: 120, temperature: 0.65 });
+  try {
+    const parsed = JSON.parse(reply);
+    const title = (parsed.title || "").toString().trim() || "Groq quest";
+    const desc = (parsed.desc || parsed.description || "").toString().trim() || "Complete a helpful task.";
+    const goal = Math.max(1, Math.min(10, Number(parsed.goal) || 1));
+    const xp = Math.max(5, Math.min(100, Number(parsed.xp) || 20));
+    return {
+      id: `quest-groq-${Date.now()}`,
+      title,
+      desc,
+      progress: 0,
+      goal,
+      reward: { xp },
+      active: true,
+      created: Date.now(),
+    };
+  } catch (e) {
+    // Fallback: extract simple text
+    const title = "Groq quest";
+    return {
+      id: `quest-groq-${Date.now()}`,
+      title,
+      desc: reply.slice(0, 120) || "Complete a helpful task.",
+      progress: 0,
+      goal: 1,
+      reward: { xp: 20 },
+      active: true,
+      created: Date.now(),
+    };
+  }
+}
+
+function loadDailyModifierState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(DAILY_MODIFIER_STATE_KEY) || "{}");
+    const today = getQuestTodayKey();
+    if (parsed.date !== today) {
+      return { date: today, offset: 0, rerolled: false };
+    }
+    return {
+      date: today,
+      offset: Number(parsed.offset) || 0,
+      rerolled: !!parsed.rerolled,
+    };
+  } catch (e) {
+    return { date: getQuestTodayKey(), offset: 0, rerolled: false };
+  }
+}
+
+function saveDailyModifierState(state) {
+  try {
+    localStorage.setItem(DAILY_MODIFIER_STATE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn("Unable to save daily modifier state", e);
+  }
+}
+
+function getDailyModifier(state) {
+  if (!DAILY_MODIFIERS.length) return null;
+  const dayNumber = Math.floor(Date.now() / 86400000);
+  const offset = Number(state?.offset) || 0;
+  const index = (dayNumber + offset) % DAILY_MODIFIERS.length;
+  return DAILY_MODIFIERS[index];
+}
+
+function renderDailyModifier() {
+  if (!dailyModifierName || !dailyModifierSummary || !dailyModifierMeta) return;
+  const state = loadDailyModifierState();
+  const mod = getDailyModifier(state);
+  if (!mod) {
+    dailyModifierName.textContent = "No daily modifiers yet";
+    dailyModifierSummary.textContent = "Add entries to DAILY_MODIFIERS to rotate buffs.";
+    dailyModifierMeta.textContent = "N/A";
+    dailyModifierReroll && (dailyModifierReroll.disabled = true);
+    if (dailyModifierFlavor) dailyModifierFlavor.textContent = "";
+    return;
+  }
+  dailyModifierName.textContent = mod.name;
+  dailyModifierSummary.textContent = mod.summary;
+  dailyModifierMeta.textContent = `Rotates in ~${hoursUntilNextEvent()}h`;
+  if (dailyModifierFlavor) dailyModifierFlavor.textContent = "";
+  if (dailyModifierReroll) {
+    dailyModifierReroll.disabled = state.rerolled;
+    dailyModifierReroll.textContent = state.rerolled ? "Rerolled" : "Reroll";
+  }
+  updateTimelineSources("dailyModifier", [
+    {
+      type: "event",
+      label: `Daily modifier: ${mod.name}`,
+      meta: mod.summary,
+      time: new Date(),
+    },
+  ]);
+  if (groqReady) {
+    groqDailyModifierFlavor(mod).catch(() => {});
+  }
+}
+
+function rerollDailyModifier() {
+  const state = loadDailyModifierState();
+  if (state.rerolled) return;
+  state.offset = (Number(state.offset) || 0) + 1;
+  state.rerolled = true;
+  saveDailyModifierState(state);
+  renderDailyModifier();
+}
+
+async function groqDailyModifierFlavor(mod) {
+  if (!mod || !dailyModifierFlavor) return;
+  const prompt = [
+    { role: "system", content: "You are a brisk narrator for a productivity dashboard. Given a daily modifier, add a 1-sentence flavor hook (<16 words) that ties to chores/filing/automation. Avoid instructions; just flavor." },
+    { role: "user", content: `Modifier: ${mod.name}. Summary: ${mod.summary}.` },
+  ];
+  try {
+    const { reply } = await callGroq(prompt, { maxTokens: 50, temperature: 0.9 });
+    if (reply) {
+      dailyModifierFlavor.textContent = reply.trim();
+    }
+  } catch (e) {
+    // ignore, keep blank
+  }
+}
+
 function loadAchievementState() {
   try {
     const parsed = JSON.parse(localStorage.getItem(ACHIEVEMENT_STATE_KEY) || "{}");
@@ -2186,11 +2490,39 @@ function markAchievement(id) {
 
 function renderAchievements() {
   if (!achievementList) return;
+  const featuredWrap = document.querySelector("#achievement-featured");
   const state = achievementState?.earned || {};
   const earnedCount = Object.keys(state).length;
   if (achievementSummary) {
     achievementSummary.textContent = `${earnedCount}/${ACHIEVEMENTS.length} earned`;
     achievementSummary.className = `status-chip ${earnedCount ? "ok" : ""}`;
+  }
+  if (featuredWrap) {
+    const featured = [];
+    const earnedSorted = Object.entries(state)
+      .map(([id, ts]) => ({ id, ts }))
+      .sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    earnedSorted.slice(0, 2).forEach((entry) => featured.push(entry.id));
+    if (featured.length < 3) {
+      ACHIEVEMENTS.slice(0, 3).forEach((ach) => {
+        if (!featured.includes(ach.id)) featured.push(ach.id);
+      });
+    }
+    featuredWrap.innerHTML = featured
+      .map((id) => {
+        const ach = ACHIEVEMENTS.find((a) => a.id === id) || ACHIEVEMENTS[0];
+        const earnedAt = state[id];
+        const tag = earnedAt ? `<span class="status-chip ok">Earned ${formatRefreshTime(earnedAt)}</span>` : `<span class="status-chip">Locked</span>`;
+        return `<div class="featured-badge" data-earned="${earnedAt ? "1" : "0"}">
+            <div class="featured-icon">🏅</div>
+            <div>
+              <p class="task-meta">${ach.title}</p>
+              <strong>${ach.description}</strong>
+              ${tag}
+            </div>
+          </div>`;
+      })
+      .join("");
   }
   achievementList.innerHTML = ACHIEVEMENTS.map((ach) => {
     const earnedAt = state[ach.id];
@@ -2216,6 +2548,10 @@ function renderTavernLine() {
   const index = ((tavernIndex % TAVERN_BANTER.length) + TAVERN_BANTER.length) % TAVERN_BANTER.length;
   tavernLine.textContent = TAVERN_BANTER[index];
   tavernMeta.textContent = `Line ${index + 1} of ${TAVERN_BANTER.length} · rotates every 7s`;
+  if (groqReady && tavernLine.textContent && tavernLine.textContent.startsWith("Groq:") === false) {
+    // fire-and-forget Groq flavor; no blocking UI
+    groqTavernLine().catch(() => {});
+  }
 }
 
 function startTavernRotation() {
@@ -2243,6 +2579,10 @@ function logDiceResult(text) {
   diceLog.prepend(li);
   const items = Array.from(diceLog.querySelectorAll("li"));
   items.slice(10).forEach((item) => item.remove());
+
+  if (groqReady && text && !text.includes("[Error]")) {
+    groqDiceFlavor(text).catch(() => {});
+  }
 }
 
 function rollEncounter() {
@@ -3413,23 +3753,34 @@ function pickNpcVisitor(forceNew = false) {
       stored = null;
     }
   }
-  if (stored && stored.date === todayKey && stored.visitor && stored.visitor.image) {
-    return stored.visitor;
+  const storedVisitor = stored && stored.date === todayKey ? stored.visitor : null;
+  if (storedVisitor && storedVisitor.name) {
+    return storedVisitor;
   }
-  const visitor = npcVisitors[Math.floor(Math.random() * npcVisitors.length)];
+  // purge invalid cached visitor
   try {
-    localStorage.setItem(NPC_STORAGE_KEY, JSON.stringify({ date: todayKey, visitor }));
+    localStorage.removeItem(NPC_STORAGE_KEY);
   } catch (e) {}
+  const visitor = npcVisitors[Math.floor(Math.random() * npcVisitors.length)] || npcVisitors[0] || null;
+  if (visitor) {
+    try {
+      localStorage.setItem(NPC_STORAGE_KEY, JSON.stringify({ date: todayKey, visitor }));
+    } catch (e) {}
+  }
   return visitor;
 }
 
 function renderNpc(visitor) {
-  if (!npcPanel || !visitor) return;
-  if (npcName) npcName.textContent = visitor.name;
-  if (npcRole) npcRole.textContent = visitor.role;
-  if (npcQuest) npcQuest.textContent = visitor.quest;
-  if (npcTip) npcTip.textContent = visitor.tip;
-  if (npcReward) npcReward.textContent = visitor.reward?.text || visitor.reward || "";
+  if (!npcPanel) return;
+  const baseFallback = { name: "Wanderer", role: "Passing traveler", quest: "Click reroll to meet someone new.", tip: "Reroll if empty.", reward: { text: "—" }, icon: "❔", gradient: "linear-gradient(135deg,#64748b,#cbd5e1)" };
+  const fallback = visitor && visitor.name ? visitor : baseFallback;
+  window.currentNpc = fallback;
+  npcPanel.style.display = "block";
+  if (npcName) npcName.textContent = fallback.name || "Visitor";
+  if (npcRole) npcRole.textContent = fallback.role || "";
+  if (npcQuest) npcQuest.textContent = fallback.quest || "";
+  if (npcTip) npcTip.textContent = fallback.tip || "";
+  if (npcReward) npcReward.textContent = fallback.reward?.text || fallback.reward || "—";
   const claimed = isNpcRewardClaimed();
   const claimBtn = document.getElementById("npc-claim");
   if (claimBtn) {
@@ -3438,23 +3789,23 @@ function renderNpc(visitor) {
     claimBtn.dataset.npcId = visitor.name || "npc";
   }
   if (npcAvatar) {
-    const hasImage = !!visitor.image;
-    npcAvatar.textContent = hasImage ? "" : visitor.icon || visitor.name?.[0] || "★";
+    const hasImage = !!fallback.image;
+    npcAvatar.textContent = hasImage ? "" : fallback.icon || fallback.name?.[0] || "★";
     npcAvatar.style.background = hasImage
       ? "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.16), transparent 55%)"
-      : visitor.gradient || "var(--accent-soft)";
+      : fallback.gradient || "var(--accent-soft)";
     if (npcAvatarImg) {
       if (hasImage) {
         const resolved = (() => {
           try {
-            return new URL(visitor.image, window.location.href).toString();
+            return new URL(fallback.image, window.location.href).toString();
           } catch (e) {
-            return visitor.image;
+            return fallback.image;
           }
         })();
         npcAvatarImg.onerror = () => {
           npcAvatarImg.style.display = "none";
-          npcAvatar.textContent = visitor.icon || visitor.name?.[0] || "★";
+          npcAvatar.textContent = fallback.icon || fallback.name?.[0] || "★";
         };
         npcAvatarImg.onload = () => {
           npcAvatarImg.style.display = "block";
@@ -3511,6 +3862,144 @@ function claimNpcReward(visitor) {
   setActionFeedback("Reward claimed.");
 }
 
+function loadGroqKey() {
+  try {
+    const stored = localStorage.getItem(GROQ_KEY_STORAGE_KEY);
+    if (stored) return stored;
+    // allow a global, non-committed override (e.g., set window.LIFEHUB_GROQ_KEY in dashboard-inline-data.js)
+    if (typeof window !== "undefined" && window.LIFEHUB_GROQ_KEY) return window.LIFEHUB_GROQ_KEY;
+    return "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function saveGroqKey(key) {
+  try {
+    localStorage.setItem(GROQ_KEY_STORAGE_KEY, key || "");
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function loadNpcChatHistory(name) {
+  if (!name) return [];
+  try {
+    const all = JSON.parse(localStorage.getItem(NPC_CHAT_STORAGE_KEY) || "{}");
+    const arr = Array.isArray(all[name]) ? all[name] : [];
+    return arr.slice(-12);
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveNpcChatHistory(name, history) {
+  if (!name) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(NPC_CHAT_STORAGE_KEY) || "{}");
+    all[name] = history.slice(-12);
+    localStorage.setItem(NPC_CHAT_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("Unable to save NPC chat history", e);
+  }
+}
+
+function renderNpcChat(history = []) {
+  if (!npcChatLog) return;
+  if (!history.length) {
+    npcChatLog.innerHTML = `<li class="task-meta">No messages yet.</li>`;
+    return;
+  }
+  npcChatLog.innerHTML = history
+    .map((msg) => {
+      const who = msg.role === "assistant" ? "NPC" : "You";
+      const cls = msg.role === "assistant" ? "from-npc" : "from-user";
+      return `<li class="${cls}"><strong>${who}:</strong> ${escapeHtml(msg.content || "")}</li>`;
+    })
+    .join("");
+}
+
+async function callGroq(messages, { maxTokens = 120, temperature = 0.7 } = {}) {
+  const apiKey = (npcGroqKeyInput?.value || loadGroqKey()).trim();
+  if (!apiKey) throw new Error("No Groq key set");
+  let lastError = null;
+  for (const model of GROQ_MODELS) {
+    try {
+      const res = await fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = payload?.error?.message || `Groq returned ${res.status}`;
+        throw new Error(msg);
+      }
+      const reply = payload?.choices?.[0]?.message?.content;
+      if (!reply) {
+        throw new Error("Empty reply from Groq");
+      }
+      return { reply, model };
+    } catch (err) {
+      lastError = err;
+      console.warn("Groq call failed on model", err);
+    }
+  }
+  throw lastError || new Error("Groq call failed");
+}
+
+async function sendNpcChatMessage() {
+  if (!npcChatInput || !npcChatStatus) return;
+  const npc = window.currentNpc;
+  if (!npc || !npc.name) {
+    npcChatStatus.textContent = "Pick a visitor first.";
+    return;
+  }
+  const apiKey = (npcGroqKeyInput?.value || loadGroqKey()).trim();
+  if (!apiKey) {
+    npcChatStatus.textContent = "Enter your Groq API key first.";
+    return;
+  }
+  const userText = npcChatInput.value.trim();
+  if (!userText) return;
+  const history = loadNpcChatHistory(npc.name);
+  history.push({ role: "user", content: userText });
+  saveNpcChatHistory(npc.name, history);
+  renderNpcChat(history);
+  npcChatInput.value = "";
+  npcChatStatus.textContent = "Thinking…";
+
+  const systemPrompt = `You are ${npc.name}, ${npc.role}. Stay in character, brief, upbeat, and tied to LifeHub chores/quests. Quest: ${npc.quest}. Tip: ${npc.tip}. Reward: ${typeof npc.reward === "object" ? JSON.stringify(npc.reward) : npc.reward}. Avoid long paragraphs.`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history.slice(-8),
+  ];
+
+  try {
+    const { reply, model } = await callGroq(messages, { maxTokens: 180, temperature: 0.6 });
+    history.push({ role: "assistant", content: reply });
+    saveNpcChatHistory(npc.name, history);
+    renderNpcChat(history);
+    npcChatStatus.textContent = `Ready (model: ${model})`;
+  } catch (e) {
+    console.warn("Groq chat failed", e);
+    const msg = e.message || "Groq call failed";
+    npcChatStatus.textContent = `Chat failed: ${msg}`;
+    history.push({ role: "assistant", content: `[Error] ${msg}` });
+    saveNpcChatHistory(npc.name, history);
+    renderNpcChat(history);
+  }
+}
+
 function setupTextGameHistory(input, historyArray) {
   if (!input) return { push: () => {} };
   let index = historyArray.length;
@@ -3547,6 +4036,138 @@ function clearTextGameConsole(variant = "base") {
   focusTextGameInput(variant);
 }
 
+async function requestTextGameHint(variant = "base") {
+  const hintToggle = variant === "v2" ? textGameV2GroqToggle : textGameGroqToggle;
+  if (hintToggle && !hintToggle.checked) {
+    const status = variant === "v2" ? textGameV2Status : textGameStatus;
+    if (status) status.textContent = "Enable Groq hints to consult the caretaker.";
+    return;
+  }
+  if (!groqReady) {
+    const status = variant === "v2" ? textGameV2Status : textGameStatus;
+    if (status) status.textContent = "Groq key missing; set it in NPC chat first.";
+    return;
+  }
+  const output = variant === "v2" ? textGameV2Output : textGameOutput;
+  const status = variant === "v2" ? textGameV2Status : textGameStatus;
+  const log = output ? output.textContent || "" : "";
+  const lastLines = log.split("\n").slice(-12).join("\n");
+  const npc = window.currentNpc?.name || (variant === "v2" ? "Caretaker" : "Guide");
+  const prompt = [
+    { role: "system", content: "You are a helpful in-universe caretaker for a text adventure. Provide a brief (<=30 words), in-character hint based on recent output. Avoid spoilers; nudge the player." },
+    { role: "user", content: `Recent output:\n${lastLines || "No output yet."}\nHint, please.` },
+  ];
+  status && (status.textContent = "Consulting caretaker via Groq…");
+  try {
+    const { reply } = await callGroq(prompt, { maxTokens: 90, temperature: 0.65 });
+    if (reply && output) {
+      const target = variant === "v2" ? textGameV2Output : textGameOutput;
+      const chunk = document.createElement("pre");
+      chunk.textContent = `${npc}: ${reply.trim()}`;
+      target.appendChild(chunk);
+      target.scrollTop = target.scrollHeight;
+    }
+    status && (status.textContent = "Hint ready.");
+  } catch (e) {
+    console.warn("Groq hint failed", e);
+    status && (status.textContent = `Hint failed: ${e.message || "Check key/network."}`);
+  }
+}
+
+async function maybeGroqNpcChat(dialogueContext, variant = "base") {
+  const toggle = variant === "v2" ? textGameV2GroqToggle : textGameGroqToggle;
+  if (toggle && !toggle.checked) return;
+  if (!groqReady) return;
+  
+  const output = variant === "v2" ? textGameV2Output : textGameOutput;
+  const status = variant === "v2" ? textGameV2Status : textGameStatus;
+  
+  if (status) status.textContent = "AI is thinking...";
+
+  const sysPrompt = `You are an NPC in a deterministic text adventure game.
+NPC Name: ${dialogueContext.npcName}
+Location: ${dialogueContext.playerLocation}
+Room description: ${dialogueContext.worldContext.room_desc}
+Player Inventory: ${dialogueContext.worldContext.inventory.join(', ') || 'empty'}
+Other NPCs present: ${dialogueContext.npcsPresent.join(', ')}
+
+Rules:
+1. You MUST respond as the NPC.
+2. DO NOT narrate actions for the player or change the game state. The Python engine is the ONLY authority for state.
+3. Return ONLY a valid JSON object with the following schema:
+{
+  "npcId": "${dialogueContext.npcId}",
+  "dialogue": "Your speech/response here..."
+}`;
+
+  const prompt = [
+    { role: "system", content: sysPrompt },
+    { role: "user", content: `Player says: "${dialogueContext.promptText}". Reply in character.` },
+  ];
+  
+  try {
+    const { reply } = await callGroq(prompt, { maxTokens: 150, temperature: 0.7, response_format: { type: "json_object" } });
+    if (reply && output) {
+      let parsed;
+      try {
+        parsed = JSON.parse(reply);
+      } catch (err) {
+        parsed = null;
+      }
+      
+      const currentRoom = await pyodideInstance.runPythonAsync(`lifehub_current_room()`);
+      const currentReqId = await pyodideInstance.runPythonAsync(`lifehub_current_req()`);
+      
+      if (currentRoom !== dialogueContext.roomId || currentReqId !== dialogueContext.reqId) {
+        console.warn("Discarding stale AI response. Player moved or conversation changed.");
+      } else {
+        const chunk = document.createElement("pre");
+        
+        let finalDialogue = "I'm afraid I've lost my train of thought.";
+        if (parsed && typeof parsed === "object" && typeof parsed.npcId === "string" && parsed.npcId === dialogueContext.npcId && typeof parsed.dialogue === "string" && parsed.dialogue.trim().length > 0) {
+            finalDialogue = parsed.dialogue.trim();
+        }
+        
+        chunk.textContent = `${dialogueContext.npcName}: ${finalDialogue}`;
+        output.appendChild(chunk);
+        output.scrollTop = output.scrollHeight;
+      }
+    }
+    if (status) status.textContent = "Game ready. Enter commands below.";
+  } catch (e) {
+    if (status) status.textContent = "AI failed to respond.";
+    const chunk = document.createElement("pre");
+    chunk.textContent = `[System] ${dialogueContext.npcName} stares blankly. (AI Error)`;
+    if (output) {
+      output.appendChild(chunk);
+      output.scrollTop = output.scrollHeight;
+    }
+  }
+}
+
+function handleNpcIntentOld(line, variant = "base") {
+  const toggle = variant === "v2" ? textGameV2GroqToggle : textGameGroqToggle;
+  if (toggle && !toggle.checked) return false;
+  if (!groqReady) return false;
+  const trimmed = (line || "").trim();
+  if (!trimmed) return false;
+  if (!NPC_CHAT_VERB_RE.test(trimmed)) return false;
+  const npcList = variant === "v2" ? textGameV2Npcs : textGameNpcs;
+  const lc = trimmed.toLowerCase();
+  const intentMatch = lc.match(/^(talk|ask|hug|say|introduce|tell|hello|hi)\b(.*)$/i);
+  let target = "";
+  if (intentMatch) {
+    target = (intentMatch[2] || "").trim().replace(/^["']|["']$/g, "");
+  } else if (/^["“].+["”]$/.test(trimmed)) {
+    target = "caretaker";
+  }
+  const known = npcList.find((n) => n && target && n.toLowerCase().includes(target.toLowerCase()));
+  const npc = known || target || "Caretaker";
+  if (!npc) return false;
+  // send Groq reply without dispatching to the game
+  maybeGroqNpcChat(`talk ${npc}: ${trimmed}`, variant).catch(() => {});
+  return true;
+}
 async function runQuickTextGameCommand(command, variant = "base") {
   const ready = variant === "v2" ? textGameV2Ready : textGameReady;
   const input = variant === "v2" ? textGameV2Input : textGameInput;
@@ -3741,18 +4362,6 @@ function normalizeGameInput(line, npcs = []) {
   if (/^\\d+$/.test(lower)) {
     return { command: `say ${lower}` };
   }
-  if (lower === "unlock" || lower === "unlock gate") {
-    return { command: "use rusty key", autoMessage: "You test the rusty key in the gate." };
-  }
-  if (lower === "talk") {
-    if (npcs.length === 1) {
-      const npc = npcs[0];
-      return { command: `talk ${npc}`, autoMessage: `You approach ${npc}.` };
-    }
-    if (npcs.length > 1) {
-      return { command: "", statusHint: `Multiple NPCs nearby: ${npcs.join(", ")}. Try “talk name”.` };
-    }
-  }
   return { command: raw };
 }
 
@@ -3779,14 +4388,23 @@ async function sendTextGameCommand(line) {
     appendTextGameOutput(normalized.autoMessage);
   }
   try {
+    const allowNpcGroq = NPC_CHAT_VERB_RE.test(normalized.command || "");
+    // If Groq NPC intent is handled, skip dispatch to the game to avoid "Unknown command"
+    if (allowNpcGroq && handleNpcIntent(normalized.command, "base")) {
+      setTextGameStatus("NPC responded.");
+      return;
+    }
     const escaped = JSON.stringify(normalized.command);
     const resultJson = await pyodideInstance.runPythonAsync(`lifehub_command(${escaped})`);
     const data = JSON.parse(resultJson);
     appendTextGameOutput(data.output || "");
     await refreshTextGameNpcs();
-    if (data.keep_running) {
+    if (data.lifehub_dialogue && data.lifehub_dialogue.valid) {
+      maybeGroqNpcChat(data.lifehub_dialogue, "base").catch(() => {});
+    } else if (data.keep_running) {
       setTextGameStatus("Game ready. Enter commands below.");
     }
+    
     if (!data.keep_running) {
       setTextGameStatus("Game ended. Refresh or click Start Game to play again.");
       if (textGameInput) textGameInput.disabled = true;
@@ -3868,6 +4486,12 @@ async function sendTextGameCommandV2(line) {
     appendTextGameV2Output(normalized.autoMessage);
   }
   try {
+    const allowNpcGroq = NPC_CHAT_VERB_RE.test(normalized.command || "");
+    // If Groq NPC intent is handled, skip dispatch to the game to avoid "Unknown command"
+    if (allowNpcGroq && handleNpcIntent(normalized.command, "v2")) {
+      setTextGameV2Status("NPC responded.");
+      return;
+    }
     const escaped = JSON.stringify(normalized.command);
     const resultJson = await pyodideV2Instance.runPythonAsync(`lifehub_command(${escaped})`);
     const data = JSON.parse(resultJson);
@@ -3884,6 +4508,9 @@ async function sendTextGameCommandV2(line) {
     }
     if (textGameV2Autosave) {
       await saveGameState("v2");
+    }
+    if (allowNpcGroq) {
+      maybeGroqNpcChat(normalized.command, "v2").catch(() => {});
     }
   } catch (error) {
     console.error(error);
@@ -4262,6 +4889,8 @@ function bindEvents() {
     textGameV2Autosave = localStorage.getItem(TEXT_GAME_V2_AUTOSAVE_KEY) === "1";
     if (textGameAutosaveToggle) textGameAutosaveToggle.checked = textGameAutosave;
     if (textGameV2AutosaveToggle) textGameV2AutosaveToggle.checked = textGameV2Autosave;
+    if (textGameGroqToggle) textGameGroqToggle.checked = localStorage.getItem(TEXT_GAME_GROQ_KEY) !== "0";
+    if (textGameV2GroqToggle) textGameV2GroqToggle.checked = localStorage.getItem(TEXT_GAME_V2_GROQ_KEY) !== "0";
   } catch (e) {}
   searchInput.addEventListener("input", (event) => {
     renderCards(event.target.value);
@@ -4821,6 +5450,12 @@ function bindEvents() {
       appendTextGameV2Output("[Error] Failed to run command.");
     }
   });
+  textGameGroqHintButton?.addEventListener("click", () => {
+    requestTextGameHint("base");
+  });
+  textGameV2GroqHintButton?.addEventListener("click", () => {
+    requestTextGameHint("v2");
+  });
   textGameAutosaveToggle?.addEventListener("change", (event) => {
     textGameAutosave = !!event.target.checked;
     try { localStorage.setItem(TEXT_GAME_AUTOSAVE_KEY, textGameAutosave ? "1" : "0"); } catch (e) {}
@@ -4829,14 +5464,61 @@ function bindEvents() {
     textGameV2Autosave = !!event.target.checked;
     try { localStorage.setItem(TEXT_GAME_V2_AUTOSAVE_KEY, textGameV2Autosave ? "1" : "0"); } catch (e) {}
   });
-  if (npcPanel) {
-    renderNpc(pickNpcVisitor());
-    npcReroll?.addEventListener("click", () => renderNpc(pickNpcVisitor(true)));
-    document.getElementById("npc-claim")?.addEventListener("click", () => {
-      const visitor = pickNpcVisitor();
-      claimNpcReward(visitor);
-    });
+  textGameGroqToggle?.addEventListener("change", (event) => {
+    try { localStorage.setItem(TEXT_GAME_GROQ_KEY, event.target.checked ? "1" : "0"); } catch (e) {}
+  });
+  textGameV2GroqToggle?.addEventListener("change", (event) => {
+    try { localStorage.setItem(TEXT_GAME_V2_GROQ_KEY, event.target.checked ? "1" : "0"); } catch (e) {}
+  });
+if (npcPanel) {
+  const visitor = pickNpcVisitor() || npcVisitors[0] || null;
+  renderNpc(visitor);
+  npcReroll?.addEventListener("click", () => renderNpc(pickNpcVisitor(true) || npcVisitors[0] || null));
+  document.getElementById("npc-claim")?.addEventListener("click", () => {
+    const v = pickNpcVisitor() || npcVisitors[0] || null;
+    if (v) claimNpcReward(v);
+  });
+  // hydrate Groq key + chat
+  if (npcGroqKeyInput) {
+    npcGroqKeyInput.value = loadGroqKey();
   }
+  if (npcGroqSaveButton && npcGroqKeyInput) {
+    npcGroqSaveButton.addEventListener("click", () => {
+      saveGroqKey(npcGroqKeyInput.value.trim());
+    npcChatStatus && (npcChatStatus.textContent = "Saved key locally.");
+    setGroqReady(!!npcGroqKeyInput.value.trim());
+  });
+}
+// auto-fill from global override once if no stored key
+if (npcGroqKeyInput && !npcGroqKeyInput.value && typeof window !== "undefined" && window.LIFEHUB_GROQ_KEY) {
+  npcGroqKeyInput.value = window.LIFEHUB_GROQ_KEY;
+  saveGroqKey(window.LIFEHUB_GROQ_KEY);
+  npcChatStatus && (npcChatStatus.textContent = "Loaded Groq key from inline config.");
+  setGroqReady(true);
+}
+  const restoreChat = () => {
+    const npc = window.currentNpc;
+    if (!npc || !npc.name) return;
+    const history = loadNpcChatHistory(npc.name);
+    renderNpcChat(history);
+    if (history.length && npcChatStatus) npcChatStatus.textContent = "Ready";
+  };
+  restoreChat();
+  npcChatSend?.addEventListener("click", () => sendNpcChatMessage());
+  npcChatInput?.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter" && !ev.shiftKey) {
+      ev.preventDefault();
+      sendNpcChatMessage();
+    }
+  });
+  npcChatClear?.addEventListener("click", () => {
+    const npc = window.currentNpc;
+    if (!npc || !npc.name) return;
+    saveNpcChatHistory(npc.name, []);
+    renderNpcChat([]);
+    npcChatStatus && (npcChatStatus.textContent = "Cleared.");
+  });
+}
 
   // Panel icons on headings
   Object.entries(PANEL_ICON_MAP).forEach(([id, icon]) => {
@@ -4996,6 +5678,12 @@ function bindEvents() {
     if (section) {
       event.preventDefault();
       showDetail(section);
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
+      event.preventDefault();
+      const visitor = pickNpcVisitor(true);
+      renderNpc(visitor);
+      setActionFeedback("New visitor summoned.");
     }
   });
 
@@ -5503,6 +6191,7 @@ function renderRecentFiles(payload) {
     return;
   }
   entries.forEach(([area, files]) => {
+    if (!Array.isArray(files)) return;
     const card = document.createElement("article");
     card.className = "recent-card";
     card.innerHTML = `
@@ -6659,7 +7348,8 @@ function flattenRecentFiles(payload) {
   if (!payload) return [];
   const items = [];
   Object.entries(payload).forEach(([area, files]) => {
-    (files || []).forEach((file, index) => {
+    if (!Array.isArray(files)) return;
+    files.forEach((file, index) => {
       items.push({
         id: `${area}-${index}-${file.path}`,
         area,
@@ -7146,6 +7836,7 @@ function collectSettingsSnapshot() {
     calm: get("lh_mode_calm"),
     readable: get("lh_readable_font"),
     noShadows: get("lh_no_shadows"),
+    confetti: get(CONFETTI_ENABLED_KEY),
     timelineFilters: (() => {
       try {
         return JSON.parse(get(TIMELINE_FILTER_KEY) || "{}");
@@ -8247,6 +8938,12 @@ async function checkAutomationRunnerStatus() {
   }
 })();
 
+try {
+  renderNpc(pickNpcVisitor() || npcVisitors[0] || null);
+} catch (e) {
+  console.warn("NPC render failed", e);
+}
+
 renderCards();
 updateFocusToggle();
 renderTasks();
@@ -8256,6 +8953,7 @@ renderCustomQuickActions();
 renderEncounterTracker();
 renderInventory();
 bindEvents();
+renderDailyModifier();
 bindTimelineFilters();
 loadStats();
 loadWellbeing();
@@ -8297,3 +8995,4 @@ renderMiniNode("start");
 setTimeout(updateAllRefreshBadges, 500);
 // Start auto-refresh every 5 minutes
 setupAutoRefresh(5);
+function handleNpcIntent(line, variant = 'base') { return false; }

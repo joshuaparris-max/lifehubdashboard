@@ -32,6 +32,24 @@ def read_text(path: Path) -> Optional[str]:
     return None
 
 
+def parse_todo_md(path: Path) -> list[dict[str, Any]]:
+  try:
+    content = path.read_text(encoding="utf-8")
+    items = []
+    current_section = "General"
+    for line in content.splitlines():
+      line_str = line.strip()
+      if line_str.startswith("## "):
+        current_section = line_str[3:].strip()
+      elif line_str.startswith("- [ ]") or line_str.startswith("- [x]"):
+        checked = line_str.startswith("- [x]")
+        text = line_str[5:].strip()
+        items.append({"section": current_section, "text": text, "checked": checked})
+    return items
+  except FileNotFoundError:
+    return []
+
+
 def build_inline_payload() -> Dict[str, Any]:
   payload = {
     "stats": read_json(ROOT / "dashboard-stats.json"),
@@ -41,6 +59,7 @@ def build_inline_payload() -> Dict[str, Any]:
     "agendaReminders": read_json(ROOT / "agenda-reminders.json"),
     "automationHistory": read_json(ROOT / "automation/logs/history.json"),
     "calendarIcs": read_text(ROOT / "Resources/calendar.ics"),
+    "todoList": parse_todo_md(ROOT / "todo.md"),
   }
   try:
     targets = load_backup_targets(ROOT / "automation/backups/targets.json")

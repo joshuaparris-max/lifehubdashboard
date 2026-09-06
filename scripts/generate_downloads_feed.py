@@ -17,7 +17,11 @@ def list_downloads() -> list[dict[str, object]]:
         return []
     entries = []
     now = datetime.now(timezone.utc)
-    for child in DOWNLOADS.iterdir():
+    try:
+        children = list(DOWNLOADS.iterdir())
+    except (PermissionError, OSError):
+        return []
+    for child in children:
         if any(child.name.startswith(prefix) for prefix in SKIP_PREFIXES):
             continue
         try:
