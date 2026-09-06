@@ -25,13 +25,11 @@ Now the largest asset fetched on every load. It exists to seed search before
 `search-index.json` arrives and to support `file://` mode. Over HTTP most of
 it is redundant with the lazily-loaded index.
 
-## 4. Fix `tests/test_text_game_ai_validation.js` fragility
+## 4. Fix `tests/test_text_game_ai_validation.js` fragility — DONE
 
-Hardcodes the absolute path `/Users/joshualukeparris/LifeHub/dashboard.js`,
-so it only runs on one machine. It also extracts `maybeGroqNpcChat` with a
-regex over source text and `eval`s it, with an unguarded `.match(...)[0]`
-that throws a confusing `TypeError` if the pattern ever misses. Export the
-function properly instead.
+Path now resolves via `__dirname`, and a failed regex match throws a
+message explaining the scraping approach instead of a bare `TypeError`.
+Exporting `maybeGroqNpcChat` properly is still the real fix.
 
 ## 5. Stop the generator escaping into nested repositories
 
@@ -55,10 +53,12 @@ are still tracked and still churn.
 dirties the tree and buries real changes in diff noise.
 </details>
 
-## 7. Investigate the skipped Jest suite
+## 7. Investigate the skipped Jest suite — DONE
 
-`jest` reports `1 skipped, 4 passed`. Either restore the suite or delete it;
-a permanently skipped test is worse than none because it reads as coverage.
+The bigger problem turned out to be three suites jest never matched at all
+(`testMatch` is `tests/**/*.test.js`; they are named `test_*.js` / `test_*.py`).
+One of them was failing. `npm test` now runs every suite via
+`scripts/run_all_tests.sh` and fails if any one fails.
 
 ## 8. Add CI
 
