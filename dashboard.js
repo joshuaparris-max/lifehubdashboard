@@ -6231,7 +6231,11 @@ async function updateAllRefreshBadges() {
       stats = await fetchJsonWithFallback("dashboard-stats.json", { cache: "no-store" }).catch(() => ({}));
     }
     if (!recentFiles) {
-      recentFiles = await fetchJsonWithFallback("recent-files.json", { cache: "no-store" }).catch(() => ({}));
+      // loadRecentFiles() already fetches this on startup; reuse its result
+      // instead of downloading recent-files.json a second time per load.
+      recentFiles =
+        recentFilesCache ||
+        (await fetchJsonWithFallback("recent-files.json", { cache: "no-store" }).catch(() => ({})));
     }
     if (!welltory) {
       welltory = await fetchJsonWithFallback("welltory-summary.json", { cache: "no-store" }).catch(() => ({}));
@@ -7030,7 +7034,9 @@ function buildCopilotHints() {
 function prefetchSearchIndex() {
   if (isFileProtocol || searchIndexRequested) return;
   searchIndexRequested = true;
-  fetch("search-index.json", { cache: "no-store" })
+  // "default" (not "no-store") so repeat loads can revalidate instead of
+  // re-downloading the whole index every time.
+  fetch("search-index.json", { cache: "default" })
     .then((response) => {
       if (!response.ok) throw new Error(`search-index.json returned ${response.status}`);
       return response.json();
@@ -8973,7 +8979,22 @@ if (window.location.protocol !== 'file:') {
   }
 }
 renderKioskSettingsForm();
-prefetchSearchIndex();
+// search-index.json is ~1.8MB and most page loads never search. searchIndex
+// is already seeded from inline data, so defer the upgrade to first use.
+(function deferSearchIndexUntilUsed() {
+  const input = document.getElementById("search");
+  if (!input) {
+    prefetchSearchIndex();
+    return;
+  }
+  const trigger = () => {
+    prefetchSearchIndex();
+    input.removeEventListener("input", trigger);
+    input.removeEventListener("focus", trigger);
+  };
+  input.addEventListener("input", trigger, { once: false });
+  input.addEventListener("focus", trigger, { once: false });
+})();
 handleCopilotQuery("");
 renderBackupStatus();
 initScratchpad();
