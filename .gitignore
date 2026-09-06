@@ -4,6 +4,8 @@
 # Allow dashboard assets and docs
 !docs/
 !docs/**
+!.github/
+!.github/**
 !.gitignore
 !README.md
 !index.html

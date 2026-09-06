@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci || npm install
+      - name: Lint
+        run: npm run lint
+      - name: Test (jest + standalone suites)
+        run: npm test
+
+  generator-is-idempotent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Directory index generator must not churn or clobber
+        run: |
+          python3 scripts/generate_directory_indexes.py
+          python3 scripts/generate_directory_indexes.py
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::generator rewrote tracked files on a no-op run"
+            git status --porcelain
+            git diff --stat
+            exit 1
+          fi
+          echo "generator is idempotent"
+      - name: Dashboard must survive a generator run
+        run: |
+          grep -q '<title>LifeHub Dashboard</title>' index.html \
+            || { echo "::error::index.html is no longer the dashboard"; exit 1; }
